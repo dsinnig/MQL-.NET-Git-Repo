@@ -7,9 +7,12 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Common", "Common\Common.shp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoyalZigZagEA", "RoyalZigZagEA\RoyalZigZagEA.csproj", "{02065632-A07C-4BFA-A5A5-158E36B58C9F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATR_EA", "ATR_EA\ATR_EA.csproj", "{536C7E02-771A-4C30-8EEB-CD7BCC1F258F}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Common\Common.projitems*{02065632-a07c-4bfa-a5a5-158e36b58c9f}*SharedItemsImports = 4
+		Common\Common.projitems*{536c7e02-771a-4c30-8eeb-cd7bcc1f258f}*SharedItemsImports = 4
 		Common\Common.projitems*{00547bcf-2f15-4326-801b-4e8911e4fcc5}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +24,10 @@ Global
 		{02065632-A07C-4BFA-A5A5-158E36B58C9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02065632-A07C-4BFA-A5A5-158E36B58C9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02065632-A07C-4BFA-A5A5-158E36B58C9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{536C7E02-771A-4C30-8EEB-CD7BCC1F258F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{536C7E02-771A-4C30-8EEB-CD7BCC1F258F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{536C7E02-771A-4C30-8EEB-CD7BCC1F258F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{536C7E02-771A-4C30-8EEB-CD7BCC1F258F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

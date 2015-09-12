@@ -31,7 +31,7 @@ namespace biiuse
         protected double swap;
         protected int spreadOrderOpen;
         protected int spreadOrderClose;
-        TradeType tradeType;
+        protected TradeType tradeType;
 
         protected System.DateTime tradeOpenedDate;
         protected System.DateTime orderPlacedDate;
@@ -89,6 +89,7 @@ namespace biiuse
                 mql4.FileSeek(filehandle, 0, MqlApi.SEEK_END);
                 string output = "****Trade: " + this.id + " ****";
                 mql4.FileWriteString(filehandle, output, output.Length);
+                mql4.FileWriteString(filehandle, "\n", 1);
                 mql4.FileClose(filehandle);
             }
         }
@@ -112,6 +113,7 @@ namespace biiuse
                 mql4.FileSeek(filehandle, 0, MqlApi.SEEK_END);
                 string output = (mql4.TimeCurrent() + TimeSpan.FromSeconds(OFFSET)).ToString() + ": " + entry;
                 mql4.FileWriteString(filehandle, output, output.Length);
+                mql4.FileWriteString(filehandle, "\n", 1);
                 mql4.FileClose(filehandle);
 
             }
@@ -143,9 +145,11 @@ namespace biiuse
                 mql4.FileSeek(filehandle, 0, MqlApi.SEEK_END);
             string output = "****Trade: " + this.id + " ****";
             mql4.FileWriteString(filehandle, output, output.Length);
+            mql4.FileWriteString(filehandle, "\n", 1);
             for (int i = 0; i < logSize; ++i)
             {
                 mql4.FileWriteString(filehandle, log[i], log[i].Length);
+                mql4.FileWriteString(filehandle, "\n", 1);
             }
             mql4.FileClose(filehandle);
         }
@@ -166,12 +170,14 @@ namespace biiuse
             }
             string output = "<b>****Trade: " + this.id + " **** </b>";
             mql4.FileWriteString(filehandle, output, output.Length);
+            mql4.FileWriteString(filehandle, "\n", 1);
             output = "<ul>";
             mql4.FileWriteString(filehandle, output, output.Length);
             for (int i = 0; i < logSize; ++i)
             {
                 output = "<li>" + log[i] + "</li>";
                 mql4.FileWriteString(filehandle, output, output.Length);
+                mql4.FileWriteString(filehandle, "\n", 1);
             }
             output = "<ul>";
             mql4.FileWriteString(filehandle, output, output.Length);
@@ -190,12 +196,11 @@ namespace biiuse
 
         }
 
-        public void writeLogToCSV()
+        public virtual void writeLogToCSV()
         {
             mql4.ResetLastError();
             int openFlags;
             openFlags = MqlApi.FILE_WRITE | MqlApi.FILE_READ | MqlApi.FILE_TXT;
-            //44 = "," in ASCII
             int filehandle = mql4.FileOpen(this.logFileName, openFlags);
             mql4.FileSeek(filehandle, 0, MqlApi.SEEK_END); //go to the end of the file
 

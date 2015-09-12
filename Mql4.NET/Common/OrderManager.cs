@@ -7,8 +7,6 @@ using NQuotes;
 
 namespace biiuse
 {
-
-
     public enum ErrorType
     { ///Rename to OrderManager
         NO_ERROR,
@@ -33,7 +31,7 @@ namespace biiuse
         public static double getLotSize(double riskCapital, int riskPips, MqlApi mql4)
         {
             double pipValue = OrderManager.getPipValue(mql4);
-            return riskCapital / ((double)riskPips * pipValue);
+            return riskCapital / ((double) riskPips * pipValue);
         }
 
         public static double getPipConversionFactor(MqlApi mql4)
@@ -52,11 +50,11 @@ namespace biiuse
             System.DateTime expiration = new DateTime();
             System.Drawing.Color arrowColor = System.Drawing.Color.Red;
 
-            double entryPrice = mql4.NormalizeDouble(_entryPrice, mql4.Digits);
-            double stopLoss = mql4.NormalizeDouble(_stopLoss, mql4.Digits);
-            double takeProfit = mql4.NormalizeDouble(_takeProfit, mql4.Digits);
-            double cancelPrice = mql4.NormalizeDouble(_cancelPrice, mql4.Digits);
-            double positionSize = mql4.NormalizeDouble(_positionSize, 2);
+            double entryPrice = (double) Decimal.Round((decimal)_entryPrice, mql4.Digits, MidpointRounding.AwayFromZero);
+            double stopLoss = (double) Decimal.Round((decimal)_stopLoss, mql4.Digits, MidpointRounding.AwayFromZero);
+            double takeProfit = (double) Decimal.Round((decimal) _takeProfit, mql4.Digits, MidpointRounding.AwayFromZero);
+            double cancelPrice = (double) Decimal.Round((decimal) _cancelPrice, mql4.Digits, MidpointRounding.AwayFromZero);
+            double positionSize = (double) Decimal.Round((decimal) _positionSize, 2, MidpointRounding.AwayFromZero);
 
             string orderTypeStr;
             string entryPriceStr = "";
@@ -142,7 +140,7 @@ namespace biiuse
         }
 
 
-        static ErrorType deleteOrder(int orderTicket, Trade trade, MqlApi mql4)
+        public static ErrorType deleteOrder(int orderTicket, Trade trade, MqlApi mql4)
         {
             trade.addLogEntry("Attemting to delete Order (ticket number: " + mql4.IntegerToString(orderTicket) + ")", true);
             mql4.ResetLastError();
@@ -151,7 +149,7 @@ namespace biiuse
         }
 
 
-        static ErrorType analzeAndProcessResult(Trade trade, MqlApi mql4)
+        public static ErrorType analzeAndProcessResult(Trade trade, MqlApi mql4)
         {
             int result = mql4.GetLastError();
             switch (result)
