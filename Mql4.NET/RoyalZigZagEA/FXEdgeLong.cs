@@ -29,8 +29,8 @@ namespace biiuse
                 context.addLogEntry("P/L: $" + mql4.DoubleToString(mql4.OrderProfit(), 2) + "; Commission: $" + mql4.DoubleToString(mql4.OrderCommission(), 2) + "; Swap: $" + mql4.DoubleToString(mql4.OrderSwap(), 2) + "; New Account balance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2), true);
 
                 context.setRealizedPL(mql4.OrderProfit());
-                context.setOrderCommission(mql4.OrderCommission());
-                context.setOrderSwap(mql4.OrderSwap());
+                context.setCommission(mql4.OrderCommission());
+                context.setSwap(mql4.OrderSwap());
 
                 context.setActualClose(mql4.OrderClosePrice());
                 context.setState(new TradeClosed(context, mql4));
@@ -57,8 +57,8 @@ namespace biiuse
                     context.addLogEntry("P/L: $" + mql4.DoubleToString(mql4.OrderProfit(), 2) + "; Commission: $" + mql4.DoubleToString(mql4.OrderCommission(), 2) + "; Swap: $" + mql4.DoubleToString(mql4.OrderSwap(), 2) + "; New Account balance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2), true);
 
                     context.setRealizedPL(mql4.OrderProfit());
-                    context.setOrderCommission(mql4.OrderCommission());
-                    context.setOrderSwap(mql4.OrderSwap());
+                    context.setCommission(mql4.OrderCommission());
+                    context.setSwap(mql4.OrderSwap());
 
                     context.setActualClose(mql4.OrderClosePrice());
                     context.setState(new TradeClosed(context, mql4));

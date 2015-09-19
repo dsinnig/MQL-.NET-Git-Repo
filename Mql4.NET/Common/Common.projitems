@@ -9,8 +9,13 @@
     <Import_RootNamespace>Common</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Filled.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Final.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MQL4Wrapper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Order.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)OrderManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)OrderState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pending.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Trade.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TradeClosed.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TradeState.cs" />

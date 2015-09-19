@@ -10,6 +10,7 @@ namespace biiuse
         public TradeClosed(Trade aContext, MqlApi mql4) : base(mql4)
         {
             this.context = aContext;
+            this.context.Order.OrderType = OrderType.FINAL;
             context.setEndingBalance(mql4.AccountBalance());
             context.setTradeClosedDate(mql4.TimeCurrent());
             context.setSpreadOrderClose((int)mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_SPREAD));

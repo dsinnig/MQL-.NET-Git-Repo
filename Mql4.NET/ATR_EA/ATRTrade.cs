@@ -36,8 +36,8 @@ namespace biiuse
         private bool movAverageCrossOver;
         private string orderType;
 
-        public ATRTrade(int _lotDigits, string _logFileName, double _newHHLL, double _ATR, int _lengthIn1MBarsOfWaitingPeriod, double _percentageOfATRForMaxRisk, double _percentageOfATRForMaxVolatility,
-            double _minProfitTarget, int _rangeBufferInMicroPips, double _rangeRestriction, double _tenDayRange, MqlApi mql4) : base(_lotDigits, _logFileName, mql4)
+        public ATRTrade(bool sim, int _lotDigits, string _logFileName, double _newHHLL, double _ATR, int _lengthIn1MBarsOfWaitingPeriod, double _percentageOfATRForMaxRisk, double _percentageOfATRForMaxVolatility,
+            double _minProfitTarget, int _rangeBufferInMicroPips, double _rangeRestriction, double _tenDayRange, MqlApi mql4) : base(sim, _lotDigits, _logFileName, mql4)
         {
             this.newHHLL = _newHHLL;
             this.atr = _ATR;

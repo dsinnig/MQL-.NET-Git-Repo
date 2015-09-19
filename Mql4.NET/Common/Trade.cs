@@ -45,9 +45,22 @@ namespace biiuse
         private string[] log = new string[500];
         private int logSize;
         private const int OFFSET = (-7) * 60 * 60;
+        private Order order;
 
+        public Order Order
+        {
+            get
+            {
+                return order;
+            }
 
-        public Trade(int _lotDigits, string _logFileName, NQuotes.MqlApi mql4) : base(mql4)
+            set
+            {
+                order = value;
+            }
+        }
+
+        public Trade(bool sim, int _lotDigits, string _logFileName, NQuotes.MqlApi mql4) : base(mql4)
         {
             this.logFileName = _logFileName;
             this.tradeType = TradeType.FLAT;
@@ -79,9 +92,18 @@ namespace biiuse
 
             this.finalState = false;
 
-            this.id = mql4.Symbol() + (mql4.TimeCurrent() + TimeSpan.FromSeconds(OFFSET)).ToString();
+            
 
-
+            if (sim)
+            {
+                this.order = new SimOrder(this, mql4);
+                this.id = "SIM_"+ mql4.Symbol() + (mql4.TimeCurrent() + TimeSpan.FromSeconds(OFFSET)).ToString();
+            } else
+            {
+                this.order = new Order(this, mql4);
+                this.id = mql4.Symbol() + (mql4.TimeCurrent() + TimeSpan.FromSeconds(OFFSET)).ToString();
+            }
+            
             if (!mql4.IsTesting())
             {
                 string filename = mql4.Symbol() + "_" + mql4.TimeCurrent().ToString();
@@ -94,8 +116,72 @@ namespace biiuse
             }
         }
 
+
+        /*
+
+        public virtual ErrorType submitNewOrder(int orderType, double _entryPrice, double _stopLoss, double _takeProfit, double _cancelPrice, double _positionSize)
+        {
+            return OrderManager.submitNewOrder(orderType, _entryPrice, _stopLoss, _takeProfit, _cancelPrice, _positionSize, this, mql4);
+        }
+
+        public virtual ErrorType modifyOrder(double newOpenPrice, double newStopLoss, double newTakeProfit)
+        {
+            return OrderManager.modifyOrder(this.orderTicket, newOpenPrice, newStopLoss, newTakeProfit, this, mql4);
+        }
+
+        public virtual ErrorType deleteOrder()
+        {
+            return OrderManager.deleteOrder(this.orderTicket, this, mql4);
+        }
+
+        public virtual int getOrderStatus()  
+        {
+            if (mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET)) return mql4.OrderType();
+            else return -1;
+        }
+
+        public virtual DateTime getOrderCloseTime()
+        {
+            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
+            return mql4.OrderCloseTime();
+        }
+
+        public virtual double getOrderProfit()
+        {
+            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
+            return mql4.OrderProfit();
+        }
+
+        public virtual double getOrderCommission()
+        {
+            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
+            return mql4.OrderCommission();
+        }
+
+        public virtual double getOrderSwap()
+        {
+            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
+            return mql4.OrderSwap();
+        }
+
+
+        public virtual double getOrderOpenPrice()
+        {
+            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
+            return mql4.OrderOpenPrice();
+        }
+
+        public virtual double getOrderClosePrice()
+        {
+            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
+            return mql4.OrderClosePrice();
+        }
+
+    */
+
         public virtual void update()
         {
+            if ((order.OrderType != OrderType.INIT) && (order.OrderType != OrderType.FINAL)) order.update();
             if (state != null)
                 state.update();
         }
@@ -118,8 +204,8 @@ namespace biiuse
 
             }
             //enable this only when in Not Testmode or in DEBUG mode
-            //if (print) 
-            //Print(TimeToStr(TimeCurrent(), TIME_DATE | TIME_SECONDS) + ": TradeID: " + this.id + " " + entry);
+            if (print) 
+            mql4.Print(mql4.TimeToStr(mql4.TimeCurrent(), MqlApi.TIME_DATE | MqlApi.TIME_SECONDS) + ": TradeID: " + this.id + " " + entry);
         }
 
         public void printLog()
@@ -347,20 +433,20 @@ namespace biiuse
             return this.realizedPL;
         }
 
-        public void setOrderCommission(double _commission)
+        public void setCommission(double _commission)
         {
             this.commission = _commission;
         }
-        public double getOrderCommission()
+        public double getCommission()
         {
             return this.commission;
         }
 
-        public void setOrderSwap(double _swap)
+        public void setSwap(double _swap)
         {
             this.swap = _swap;
         }
-        public double getOrderSwap()
+        public double getSwap()
         {
             return this.swap;
         }

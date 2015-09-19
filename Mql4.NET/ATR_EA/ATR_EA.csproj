@@ -57,6 +57,9 @@
     <Compile Include="Session.cs" />
     <Compile Include="SessionFactory.cs" />
     <Compile Include="ShortProfitTargetReachedLookingToAdjustStopLoss.cs" />
+    <Compile Include="SimFilled.cs" />
+    <Compile Include="SimOrder.cs" />
+    <Compile Include="SIM_Pending.cs" />
     <Compile Include="StopBuyOrderOpened.cs" />
     <Compile Include="StopSellOrderOpened.cs" />
   </ItemGroup>

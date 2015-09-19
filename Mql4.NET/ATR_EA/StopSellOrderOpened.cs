@@ -17,7 +17,7 @@ namespace biiuse
             {
                 context.addLogEntry("Bid price went above cancel level. Attempting to delete order.", true);
                 //delete Order
-                ErrorType result = OrderManager.deleteOrder(context.getOrderTicket(), context, mql4);
+                ErrorType result = context.Order.deleteOrder();
 
                 if (result == ErrorType.NO_ERROR)
                 {
@@ -40,16 +40,15 @@ namespace biiuse
                 }
             }
 
-            if (mql4.OrderSelect(context.getOrderTicket(), MqlApi.SELECT_BY_TICKET, MqlApi.MODE_TRADES))
+
+            if (context.Order.OrderType == OrderType.SELL)
             {
-                if (mql4.OrderType() == MqlApi.OP_SELL)
-                {
-                    context.addLogEntry("Order got filled at price: " + mql4.DoubleToStr(mql4.OrderOpenPrice(), mql4.Digits), true);
-                    context.setActualEntry(mql4.OrderOpenPrice());
-                    context.setState(new SellOrderFilledProfitTargetNotReached(context, mql4));
-                    return;
-                }
+                context.addLogEntry("Order got filled at price: " + mql4.DoubleToStr(context.Order.getOrderOpenPrice(), mql4.Digits), true);
+                context.setActualEntry(context.Order.getOrderOpenPrice());
+                context.setState(new SellOrderFilledProfitTargetNotReached(context, mql4));
+                return;
             }
+
         }
     }
 }

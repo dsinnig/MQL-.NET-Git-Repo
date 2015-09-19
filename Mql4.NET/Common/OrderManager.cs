@@ -140,6 +140,42 @@ namespace biiuse
         }
 
 
+        public static ErrorType modifyOrder(int orderTicket, double newOpenPrice, double newStopLoss, double newTakeProfit, Trade trade, MqlApi mql4)
+        {
+            System.DateTime expiration = new DateTime();
+            System.Drawing.Color arrowColor = System.Drawing.Color.Red;
+
+            newOpenPrice = (double)Decimal.Round((decimal)newOpenPrice, mql4.Digits, MidpointRounding.AwayFromZero);
+            newStopLoss = (double)Decimal.Round((decimal)newStopLoss, mql4.Digits, MidpointRounding.AwayFromZero);
+            newTakeProfit = (double)Decimal.Round((decimal)newTakeProfit, mql4.Digits, MidpointRounding.AwayFromZero);
+
+            string newOpenPriceStr = "";
+            string newStopLossStr = "";
+            string newTakeProfitStr = "";
+
+            if (newOpenPrice != 0.0) newOpenPriceStr = "; entry price: " + mql4.DoubleToString(newOpenPrice, mql4.Digits);
+            if (newStopLoss != 0.0) newStopLossStr = "; stop loss: " + mql4.DoubleToString(newStopLoss, mql4.Digits);
+            if (newTakeProfit != 0.0) newTakeProfitStr = "; take profit: " + mql4.DoubleToString(newTakeProfit, mql4.Digits);
+
+            trade.addLogEntry("Attemting to modify order to: NewOpenPrice: " + newOpenPriceStr + " NewStopLoss: " + newStopLossStr + " NewTakeProfit: " + newTakeProfit, true);
+
+            bool res = mql4.OrderModify(orderTicket, newOpenPrice, newStopLoss, newTakeProfit, expiration, arrowColor);
+
+            ErrorType result = analzeAndProcessResult(trade, mql4);
+
+            if (result == ErrorType.NO_ERROR)
+            {
+                trade.setPlannedEntry(newOpenPrice);
+                trade.setStopLoss(newStopLoss);
+                trade.setTakeProfit(newTakeProfit);
+            }
+
+            return result;
+
+        }
+
+
+
         public static ErrorType deleteOrder(int orderTicket, Trade trade, MqlApi mql4)
         {
             trade.addLogEntry("Attemting to delete Order (ticket number: " + mql4.IntegerToString(orderTicket) + ")", true);

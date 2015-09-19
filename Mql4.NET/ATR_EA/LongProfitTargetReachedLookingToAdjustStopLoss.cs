@@ -21,21 +21,12 @@ namespace biiuse
 
         public override void update()
         {
-            //check if order closed
-            bool success = mql4.OrderSelect(context.getOrderTicket(), MqlApi.SELECT_BY_TICKET);
-            if (!success)
+            if (!context.Order.getOrderCloseTime().Equals(new DateTime()))
             {
-                context.addLogEntry("Unable to find order. Trade must have been closed", true);
-                context.setState(new TradeClosed(context, mql4));
-                return;
-            }
-
-            if (!mql4.OrderCloseTime().Equals(new DateTime()))
-            {
-                double riskReward = (mql4.OrderClosePrice() - context.getActualEntry()) / (context.getActualEntry() - context.getOriginalStopLoss());
+                double riskReward = (context.Order.getOrderClosePrice() - context.getActualEntry()) / (context.getActualEntry() - context.getOriginalStopLoss());
                 string logMessage;
-                double pips = mql4.MathAbs(mql4.OrderClosePrice() - context.getActualEntry()) * OrderManager.getPipConversionFactor(mql4);
-                if (mql4.OrderClosePrice() > context.getActualEntry())
+                double pips = mql4.MathAbs(context.Order.getOrderClosePrice() - context.getActualEntry()) * OrderManager.getPipConversionFactor(mql4);
+                if (context.Order.getOrderClosePrice() > context.getActualEntry())
                 {
                     logMessage = "Gain of " + mql4.DoubleToString(pips, 1) + " micro pips (" + mql4.DoubleToString(riskReward, 2) + "R).";
                 }
@@ -43,15 +34,14 @@ namespace biiuse
                 {
                     logMessage = "Loss of " + mql4.DoubleToString(pips, 1) + " micro pips.";
                 }
-                context.addLogEntry("Stop loss triggered @" + mql4.DoubleToString(mql4.OrderClosePrice(), mql4.Digits) + " " + logMessage, true);
-                context.addLogEntry("P/L of: $" + mql4.DoubleToString(mql4.OrderProfit(), 2) + "; Commission: $" + mql4.DoubleToString(mql4.OrderCommission(), 2) + "; Swap: $" + mql4.DoubleToString(mql4.OrderSwap(), 2) + "; New Account balance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2), true);
+                context.addLogEntry("Stop loss triggered @" + mql4.DoubleToString(context.Order.getOrderClosePrice(), mql4.Digits) + " " + logMessage, true);
+                context.addLogEntry("P/L of: $" + mql4.DoubleToString(context.Order.getOrderProfit(), 2) + "; Commission: $" + mql4.DoubleToString(context.Order.getOrderCommission(), 2) + "; Swap: $" + mql4.DoubleToString(context.Order.getOrderSwap(), 2) + "; New Account balance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2), true);
 
 
-                context.setRealizedPL(mql4.OrderProfit());
-                context.setOrderCommission(mql4.OrderCommission());
-                context.setOrderSwap(mql4.OrderSwap());
-
-                context.setActualClose(mql4.OrderClosePrice());
+                context.setRealizedPL(context.Order.getOrderProfit());
+                context.setCommission(context.Order.getOrderCommission());
+                context.setSwap(context.Order.getOrderSwap());
+                context.setActualClose(context.Order.getOrderClosePrice());
                 context.setState(new TradeClosed(context, mql4));
                 return;
             }
@@ -119,20 +109,30 @@ namespace biiuse
                         if (downBarFound && (low - buffer > context.getInitialProfitTarget()) && (low - buffer > context.getStopLoss()))
                         {
                             context.addLogEntry("Attempting to adjust stop loss to: " + mql4.DoubleToString(low - buffer, mql4.Digits), true);
-                            //adjust stop loss
-                            bool orderSelectResult = mql4.OrderSelect(context.getOrderTicket(), MqlApi.SELECT_BY_TICKET);
-                            if (!orderSelectResult)
-                            {
-                                context.addLogEntry("Error: Unable to adjust stop loss - Order not found", true);
-                                return;
-                            }
-                            bool res = mql4.OrderModify(mql4.OrderTicket(), mql4.OrderOpenPrice(), mql4.NormalizeDouble(low - buffer, mql4.Digits), 0, new DateTime(), System.Drawing.Color.Blue);
-                            ErrorType result = OrderManager.analzeAndProcessResult(context, mql4);
+
+                            ErrorType result = context.Order.modifyOrder(context.Order.getOrderOpenPrice(), mql4.NormalizeDouble(low - buffer, mql4.Digits), 0);
+                            
+                            
                             if (result == ErrorType.NO_ERROR)
                             {
                                 context.setStopLoss(mql4.NormalizeDouble(low - buffer, mql4.Digits));
                                 context.addLogEntry("Stop loss succssfully adjusted", true);
                             }
+
+                            if ((result == ErrorType.RETRIABLE_ERROR) && (context.getOrderTicket() == -1))
+                            {
+                                context.addLogEntry("Order modification failed. Error code: " + mql4.IntegerToString(mql4.GetLastError()) + ". Will re-try at next tick", true);
+                                return;
+                            }
+
+                            if ((result == ErrorType.NON_RETRIABLE_ERROR) && (context.getOrderTicket() == -1))
+                            {
+                                context.addLogEntry("Non-recoverable error occurred. Errorcode: " + mql4.IntegerToString(mql4.GetLastError()) + ". Trade will be canceled", true);
+                                context.setState(new TradeClosed(context, mql4));
+                                return;
+                            }
+                            
+
                         }
 
                         if (low - buffer <= context.getInitialProfitTarget())

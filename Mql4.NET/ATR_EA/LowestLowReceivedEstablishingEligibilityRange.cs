@@ -147,15 +147,22 @@ namespace biiuse
                     context.addLogEntry("AccountBalance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2) + "; Risk Capital: $" + mql4.DoubleToString(riskCapital, 2) + "; Risk pips: " + mql4.DoubleToString(riskPips, 2) + " micro pips; Position Size: " + mql4.DoubleToString(positionSize, 2) + " lots; Pip value: " + mql4.DoubleToString(OrderManager.getPipValue(mql4), mql4.Digits), true);
 
                     //place Order
-                    ErrorType result = OrderManager.submitNewOrder(orderType, entryPrice, stopLoss, 0, cancelPrice, positionSize, context, mql4);
+                    ErrorType result = context.Order.submitNewOrder(orderType, entryPrice, stopLoss, 0, cancelPrice, positionSize);
 
                     context.setStartingBalance(mql4.AccountBalance());
                     context.setOrderPlacedDate(mql4.TimeCurrent());
                     context.setSpreadOrderOpen((int)mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_SPREAD));
                     context.setAskPriceBeforeOrderEntry(mql4.Ask);
                     context.setBidPriceBeforeOrderEntry(mql4.Bid);
+                    context.setCancelPrice(cancelPrice);
+                        context.setPlannedEntry(entryPrice);
+                        context.setStopLoss(stopLoss);
+                        context.setOriginalStopLoss(stopLoss);
+                        context.setTakeProfit(0);
+                        context.setCancelPrice(cancelPrice);
+                        context.setPositionSize(positionSize);
 
-                    if (result == ErrorType.NO_ERROR)
+                        if (result == ErrorType.NO_ERROR)
                     {
                         context.setInitialProfitTarget(Math.Round(context.getPlannedEntry() + ((context.getPlannedEntry() - context.getStopLoss()) * (context.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
                         context.setState(nextState);
