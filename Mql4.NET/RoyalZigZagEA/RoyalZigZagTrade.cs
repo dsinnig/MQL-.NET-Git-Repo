@@ -8,7 +8,7 @@ namespace biiuse
 {
     public class RoyalZigZagTrade : Trade
     {
-        public RoyalZigZagTrade(int _lotDigits, string _logFileName, NQuotes.MqlApi mql4) : base(_lotDigits, _logFileName, mql4)
+        public RoyalZigZagTrade(int _lotDigits, string _logFileName, NQuotes.MqlApi mql4) : base(false, _lotDigits, _logFileName, mql4)
         {
         }
 

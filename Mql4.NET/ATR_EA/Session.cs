@@ -138,6 +138,34 @@ namespace biiuse
 
         }
 
+        public void writeToCSV(string filename)
+        {
+            mql4.ResetLastError();
+            int openFlags;
+            openFlags = MqlApi.FILE_WRITE | MqlApi.FILE_READ | MqlApi.FILE_TXT;
+            int filehandle = mql4.FileOpen(filename, openFlags);
+            mql4.FileSeek(filehandle, 0, MqlApi.SEEK_END); //go to the end of the file
+
+            string output;
+            //if first entry, write column headers
+            if (mql4.FileTell(filehandle) == 0)
+            {
+                output = "START_DATE, ATR, TEN_DAY_HIGH, TEN_DAY_LOW";
+
+                mql4.FileWriteString(filehandle, output, output.Length);
+            }
+            output = ExcelUtil.datetimeToExcelDate(this.getSessionStartTime()) + ", " + this.getATR() + ", " + this.tenDayHigh + ", " + this.tenDayLow;
+
+            mql4.FileWriteString(filehandle, "\n", 1);
+            mql4.FileWriteString(filehandle, output, output.Length);
+
+
+            mql4.FileClose(filehandle);
+
+
+
+
+        }
 
         public DateTime getSessionStartTime()
         {

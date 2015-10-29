@@ -9,6 +9,7 @@
     <Import_RootNamespace>Common</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ExcelUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Filled.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Final.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MQL4Wrapper.cs" />
