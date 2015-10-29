@@ -27,7 +27,13 @@ namespace biiuse
         public int lotDigits = 1; //Lot size granularity (0 = full lots, 1 = mini lots, 2 = micro lots, etc).
         [ExternVariable]
         public int maxConsLoses = 4; //max consecutive losses before stop trading
-       [ExternVariable]
+        [ExternVariable]
+        public double maxATROR = 0.3; //max percent value for ATR / OR
+        [ExternVariable]
+        public double minATROR = 0; //min percent value for ATR / OR
+        [ExternVariable]
+        public bool cutLossesBeforeATRFilter = true; //min percent value for ATR / OR
+        [ExternVariable]
         public string logFileName = "tradeLog.csv"; //path and filename for CSV trade log
 
         public override int init()
@@ -47,6 +53,7 @@ namespace biiuse
 
         public override int start()
         {
+            //new bar?
             if (!bartime.Equals(Time[0]))
             {
                 //TODO verify that identity makes it still work
@@ -57,6 +64,8 @@ namespace biiuse
                 {
                     currSession = newSession;
 
+                    currSession.writeToCSV("session_atr.csv");
+                    
                     if (!currSession.tradingAllowed())
                     {
                         Print(TimeCurrent(), " Start session: ", currSession.getName(), " NO NEW TRADES ALLOWED.");
@@ -83,28 +92,38 @@ namespace biiuse
                 if (trade != null) trade.update();
             }
 
-            
+
             int updateResult = currSession.update(Close[0]);
 
             if (currSession.tradingAllowed())
             {
-                if (updateResult == 1)
-                {
-                    Print("Tradeable Highest High found: ", currSession.getHighestHigh(), " Time: ", currSession.getHighestHighTime());
 
-                    ATRTrade trade = new ATRTrade(simOrder2(), lotDigits, logFileName, currSession.getHighestHigh(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), this);
-                    trade.setState(new HighestHighReceivedEstablishingEligibilityRange(trade, this));
-                    trades.Add(trade);
+                double atr = currSession.getATR();
+                double tenDayHigh = currSession.getTenDayHigh();
+                double tenDayLow = currSession.getTenDayLow();
+                double ATR_OR = atr / (tenDayHigh - tenDayLow);
+
+                if ((((ATR_OR < maxATROR) && (ATR_OR > minATROR)) || cutLossesBeforeATRFilter))
+                {
+                    if (updateResult == 1)
+                    {
+                        Print("Tradeable Highest High found: ", currSession.getHighestHigh(), " Time: ", currSession.getHighestHighTime());
+
+                        ATRTrade trade = new ATRTrade(simOrder2(), lotDigits, logFileName, currSession.getHighestHigh(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, this);
+                        trade.setState(new HighestHighReceivedEstablishingEligibilityRange(trade, this));
+                        trades.Add(trade);
+                    }
+
+
+                    if (updateResult == -1)
+                    {
+                        Print("Tradeable Lowest Low found: ", currSession.getLowestLow(), " Time: ", currSession.getLowestLowTime());
+                        ATRTrade trade = new ATRTrade(simOrder2(), lotDigits, logFileName, currSession.getLowestLow(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, this);
+                        trade.setState(new LowestLowReceivedEstablishingEligibilityRange(trade, this));
+                        trades.Add(trade);
+                    }
                 }
-
-
-                if (updateResult == -1)
-                {
-                    Print("Tradeable Lowest Low found: ", currSession.getLowestLow(), " Time: ", currSession.getLowestLowTime());
-                    ATRTrade trade = new ATRTrade(simOrder2(), lotDigits, logFileName, currSession.getLowestLow(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), this);
-                    trade.setState(new LowestLowReceivedEstablishingEligibilityRange(trade, this));
-                    trades.Add(trade);
-                 }
+                
             }
             return base.start();
         }
@@ -114,7 +133,7 @@ namespace biiuse
         {
             int tradesAnalyzed = 0;
             int index = trades.Count - 1;
-            while ((tradesAnalyzed < 10) && (index >= 0))
+            while ((tradesAnalyzed < maxATROR) && (index >= minATROR))
             {
                 if (isLong)
                 {
@@ -164,6 +183,20 @@ namespace biiuse
         //alternative method to find out wether a real order a sim order should be placed
         private bool simOrder2()
         {
+            double atr = currSession.getATR();
+            double tenDayHigh = currSession.getTenDayHigh();
+            double tenDayLow = currSession.getTenDayLow();
+            double ATR_OR = atr / (tenDayHigh - tenDayLow);
+
+
+            if (cutLossesBeforeATRFilter)
+            {
+                if (!((ATR_OR < maxATROR) && (ATR_OR > minATROR)))
+                {
+                    return true;
+                }
+            }
+
             List<Trade> clean_trades = new List<Trade>();
 
             foreach (var trade in trades)
@@ -216,7 +249,7 @@ namespace biiuse
             if (amIConcurOpen) streak++;
 
             Print("STREAK IS: " + streak + "\n");
-            return streak > maxConsLoses;
+            return streak >= maxConsLoses;
             
 
         }

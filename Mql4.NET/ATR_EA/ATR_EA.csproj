@@ -29,6 +29,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>ds%40dsinnig.com.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="nquotes">
       <HintPath>..\..\..\..\..\..\..\..\..\..\..\Program Files (x86)\OANDA - MetaTrader\mql4\Libraries\nquotes\nquotes.dll</HintPath>
@@ -62,6 +68,9 @@
     <Compile Include="SIM_Pending.cs" />
     <Compile Include="StopBuyOrderOpened.cs" />
     <Compile Include="StopSellOrderOpened.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ds%40dsinnig.com.snk" />
   </ItemGroup>
   <Import Project="..\Common\Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

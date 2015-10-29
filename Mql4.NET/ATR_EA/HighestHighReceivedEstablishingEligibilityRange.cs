@@ -99,7 +99,7 @@ namespace biiuse
 
                         entryPrice = rangeLow - buffer;
                         stopLoss = rangeHigh + buffer;
-                        cancelPrice = rangeHigh;
+                        cancelPrice = rangeHigh + buffer;
                         orderType = MqlApi.OP_SELLSTOP;
                         context.setOrderType("SELL_STOP");
                         nextState = new StopSellOrderOpened(context, mql4);
@@ -117,7 +117,7 @@ namespace biiuse
 
                         entryPrice = rangeHigh - context.getATR() * (context.getPercentageOfATRForMaxRisk() / 100.00) - buffer;
                         stopLoss = rangeHigh + buffer;
-                        cancelPrice = rangeHigh - context.getATR() * (context.getPercentageOfATRForMaxVolatility() / 100.00); //cancel if above 20% of ATR
+                        cancelPrice = rangeHigh - context.getATR() * (context.getPercentageOfATRForMaxVolatility() / 100.00) - buffer; //cancel if above 20% of ATR
                         orderType = MqlApi.OP_SELLLIMIT;
                         context.setOrderType("SELL_LIMIT");
                         nextState = new SellLimitOrderOpened(context, mql4);
@@ -136,7 +136,7 @@ namespace biiuse
 
                         entryPrice = rangeHigh - context.getATR() * (context.getPercentageOfATRForMaxRisk() / 100.00) - buffer;
                         stopLoss = rangeHigh + buffer;
-                        cancelPrice = rangeHigh;
+                        cancelPrice = rangeHigh + buffer;
                         orderType = MqlApi.OP_SELLSTOP;
                         context.setOrderType("SELL_STOP");
                         nextState = new StopSellOrderOpened(context, mql4);
