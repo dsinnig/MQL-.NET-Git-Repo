@@ -14,7 +14,7 @@ namespace biiuse
         [ExternVariable]
         public int lengthOfGracePeriod = 10; //Length in 1M bars of Grace Period after a tradeable HH/LL occured
         [ExternVariable]
-        public double rangeRestriction = 80; //Min range of Grace Period
+        public double rangeRestriction = 00; //Min range of Grace Period
         [ExternVariable]
         public double maxRisk = 10; //Max risk (in percent of ATR)
         [ExternVariable]
