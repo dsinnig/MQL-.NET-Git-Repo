@@ -73,6 +73,9 @@
   <ItemGroup>
     <None Include="ds%40dsinnig.com.snk" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ds%40dsinnig.com.snk" />
+  </ItemGroup>
   <Import Project="..\Common\Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
