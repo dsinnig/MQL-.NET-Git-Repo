@@ -68,6 +68,7 @@
     <Compile Include="SIM_Pending.cs" />
     <Compile Include="StopBuyOrderOpened.cs" />
     <Compile Include="StopSellOrderOpened.cs" />
+    <Compile Include="WaitForBreakToPlaceLimitOrder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ds%40dsinnig.com.snk" />

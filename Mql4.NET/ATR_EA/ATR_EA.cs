@@ -53,7 +53,9 @@ namespace biiuse
 
         public override int start()
         {
+
             //new bar?
+
             if (!bartime.Equals(Time[0]))
             {
                 //TODO verify that identity makes it still work
@@ -65,7 +67,7 @@ namespace biiuse
                     currSession = newSession;
 
                     currSession.writeToCSV("session_atr.csv");
-                    
+
                     if (!currSession.tradingAllowed())
                     {
                         Print(TimeCurrent(), " Start session: ", currSession.getName(), " NO NEW TRADES ALLOWED.");
@@ -79,9 +81,9 @@ namespace biiuse
 
                         */
 
-                        Print(TimeCurrent(), " Start session: ", currSession.getName(), " ATR: ", NormalizeDouble(currSession.getATR(), Digits), " (", (int)(currSession.getATR() * 100000), " micro pips)", ", HH: ", currSession.getHighestHigh(), ", LL: ", currSession.getLowestLow());
+                        Print(TimeCurrent().ToString(), " Start session: ", currSession.getName(), " ATR: ", NormalizeDouble(currSession.getATR(), Digits), " (", (int)(currSession.getATR() * 100000), " micro pips)", ", HH: ", currSession.getHighestHigh(), ", LL: ", currSession.getLowestLow());
 
-                        Print("Reference date: ", currSession.getHHLL_ReferenceDateTime());
+                        Print("Reference date: ", currSession.getHHLL_ReferenceDateTime().ToString());
 
                     }
                 }
@@ -93,7 +95,7 @@ namespace biiuse
             }
 
 
-            int updateResult = currSession.update(Close[0]);
+            int updateResult = currSession.update((Bid + Ask)/2);
 
             if (currSession.tradingAllowed())
             {

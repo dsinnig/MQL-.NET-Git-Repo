@@ -38,11 +38,11 @@ namespace biiuse
                     return;
                 }
 
-                int indexOfHighestHigh = mql4.iHighest(mql4.Symbol(), MqlApi.PERIOD_H1, MqlApi.MODE_HIGH, indexOfReferenceStart, 0);
+                int indexOfHighestHigh = mql4.iHighest(mql4.Symbol(), MqlApi.PERIOD_H1, MqlApi.MODE_HIGH, indexOfReferenceStart+1, 0);
 
                 mql4.Print("Index of HH is: ", indexOfHighestHigh);
 
-                int indexOfLowestLow = mql4.iLowest(mql4.Symbol(), MqlApi.PERIOD_H1, MqlApi.MODE_LOW, indexOfReferenceStart, 0);
+                int indexOfLowestLow = mql4.iLowest(mql4.Symbol(), MqlApi.PERIOD_H1, MqlApi.MODE_LOW, indexOfReferenceStart+1, 0);
 
                 if ((indexOfHighestHigh == -1) || (indexOfLowestLow == -1))
                 {
@@ -56,13 +56,16 @@ namespace biiuse
 
                 this.dateOfHighestHigh = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfHighestHigh);
 
-                mql4.Print("Date of highest high is: ", this.dateOfHighestHigh);
+                mql4.Print("Date of highest high is: ", this.dateOfHighestHigh.ToString());
 
                 this.lowestLow = mql4.iLow(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfLowestLow);
                 this.dateOfLowestLow = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfLowestLow);
 
+                mql4.Print("Lowest low is: ", this.lowestLow);
+                mql4.Print("Date of lowest low is: ", this.dateOfLowestLow.ToString());
+
                 //check if new High / Low happened in last 100 minutes - if yes update dateOfLowestLow / dateOfHighestHigh with accurate timestamp
-                int i = HHLL_Threshold; //paratrize
+                int i = HHLL_Threshold; //paramerize
                 while (i > 0)
                 {
                     if (mql4.Low[i] == lowestLow)

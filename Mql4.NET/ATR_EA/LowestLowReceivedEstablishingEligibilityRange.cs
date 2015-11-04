@@ -5,42 +5,54 @@ namespace biiuse
 {
     internal class LowestLowReceivedEstablishingEligibilityRange : TradeState
     {
-        private ATRTrade context; 
+        private ATRTrade context;
         DateTime entryTime;
         double rangeLow;
         double rangeHigh;
+        double buffer;
         int barCounter;
         private System.DateTime lastbar = new System.DateTime();
 
 
-        public LowestLowReceivedEstablishingEligibilityRange(ATRTrade aContext, MqlApi mql4) : base(mql4) {
+        public LowestLowReceivedEstablishingEligibilityRange(ATRTrade aContext, MqlApi mql4) : base(mql4)
+        {
             this.context = aContext;
             this.entryTime = mql4.Time[0];
-            this.rangeHigh = -1;
-            this.rangeLow= 99999;
-            this.barCounter= 0;
+            this.rangeHigh = mql4.High[0];
+            this.rangeLow = mql4.Low[0];
+            this.barCounter = 0;
+            this.buffer = aContext.getRangeBufferInMicroPips() / OrderManager.getPipConversionFactor(mql4);
             context.setTradeType(TradeType.LONG);
 
-    context.addLogEntry("Lowest Low found - establishing eligibility range. Lowest low: " + mql4.DoubleToString(mql4.Close[0], mql4.Digits), true);
-    }
-
-
-    public override void update()
-    {
-        double factor = OrderManager.getPipConversionFactor(mql4);
-
-        //update range lows and range highs
-        if (mql4.Low[0] < rangeLow) rangeLow = mql4.Low[0];
-        {
-            if (mql4.High[0] > rangeHigh) rangeHigh = mql4.High[0];
+            context.addLogEntry("Lowest Low found - establishing eligibility range. Lowest low: " + mql4.DoubleToString(mql4.Close[0], mql4.Digits), true);
         }
 
-        if (isNewBar()) barCounter++;
 
-        //Waiting Period over? (deault is 10mins + 1min)
-        //if(Time[0]-entryTime>=60*(context.getLengthIn1MBarsOfWaitingPeriod()+1))  {
-        if (barCounter > context.getLengthIn1MBarsOfWaitingPeriod() + 1)
+        public override void update()
         {
+            double factor = OrderManager.getPipConversionFactor(mql4);
+
+            //update range lows and range highs
+            if (mql4.Low[0] < rangeLow)
+            {
+                rangeLow = mql4.Low[0];
+            }
+
+            if (mql4.High[0] > rangeHigh)
+            {
+                rangeHigh = mql4.High[0];
+            }
+
+            if (isNewBar()) barCounter++;
+
+            //Waiting Period over? (deault is 10mins + 1min)
+            //if(Time[0]-entryTime>=60*(context.getLengthIn1MBarsOfWaitingPeriod()+1))  {
+            if (barCounter > context.getLengthIn1MBarsOfWaitingPeriod() + 1)
+            {
+
+                //adjust range or buffer pips
+                rangeLow -= this.buffer;
+                rangeHigh += this.buffer;
 
                 context.setRSI(mql4.iCustom(null, 0, "RSI", 15, 0, 0));
                 context.setRSI5M(mql4.iCustom(null, MqlApi.PERIOD_M5, "RSI", 15, 0, 0));
@@ -64,97 +76,82 @@ namespace biiuse
 
 
                 int rangePips = (int)((rangeHigh - rangeLow) * factor); ///Works for 5 Digts pairs. Verify that calculation is valid for 3 Digits pairs
-            int ATRPips = (int)(context.getATR() * factor); ///Works for 5 Digts pairs. Verify that calculation is valid for 3 Digits pairs
+                int ATRPips = (int)(context.getATR() * factor); ///Works for 5 Digts pairs. Verify that calculation is valid for 3 Digits pairs
 
-            context.addLogEntry("Range established at: " + mql4.IntegerToString(rangePips) + " microp pips. HH=" + mql4.DoubleToString(rangeHigh, mql4.Digits) + ", LL=" + mql4.DoubleToString(rangeLow, mql4.Digits), true);
-            context.setRangeLow(rangeLow);
-            context.setRangeHigh(rangeHigh);
-            context.setRangePips(rangePips);
+                context.addLogEntry("Range established at: " + mql4.IntegerToString(rangePips) + " microp pips (incl 2*buffer) of "+ mql4.DoubleToString(buffer, mql4.Digits) + ". HH=" + mql4.DoubleToString(rangeHigh, mql4.Digits) + ", LL=" + mql4.DoubleToString(rangeLow, mql4.Digits), true);
+                context.setRangeLow(rangeLow);
+                context.setRangeHigh(rangeHigh);
+                context.setRangePips(rangePips);
 
-            //Range too large for limit or stop order
-            if ((rangeHigh - rangeLow) > ((context.getPercentageOfATRForMaxVolatility() / 100.00) * context.getATR()))
-            {
-                context.addLogEntry("Range (" + mql4.IntegerToString(rangePips) + " micro pips) greater than " + mql4.DoubleToString(context.getPercentageOfATRForMaxVolatility(), 2) + "% of ATR (" + mql4.IntegerToString(ATRPips) + " micro pips)", true);
-                context.setState(new TradeClosed(context, mql4));
-            }
-            else
-            {
-                double entryPrice = 0.0;
-                double stopLoss = 0.0;
-                double cancelPrice = 0.0;
-                int orderType = -1;
-                TradeState nextState = null;
-                double positionSize = 0;
-                double buffer = context.getRangeBufferInMicroPips() / factor; ///Works for 5 Digts pairs. Verify that calculation is valid for 3 Digits pairs
-                //Range is less than max risk
-                if ((rangeHigh - rangeLow) < ((context.getPercentageOfATRForMaxRisk() / 100.00) * context.getATR()))
+                //Range too large for limit or stop order
+                if ((rangeHigh - rangeLow) > ((context.getPercentageOfATRForMaxVolatility() / 100.00) * context.getATR()))
                 {
-
-                    //write to log
-                    context.addLogEntry("Range " + mql4.IntegerToString(rangePips) + " is less than max risk (" + mql4.DoubleToString(context.getPercentageOfATRForMaxRisk(), 2) + "% of ATR (" + mql4.IntegerToString(ATRPips) + " micro pips))", true);
-
-                    entryPrice = rangeHigh + buffer;
-                    stopLoss = rangeLow - buffer;
-                    cancelPrice = rangeLow - buffer;
-                    orderType = MqlApi.OP_BUYSTOP;
-                    context.setOrderType("BUY_STOP");
-                    nextState = new StopBuyOrderOpened(context, mql4);
+                    context.addLogEntry("Range (" + mql4.IntegerToString(rangePips) + " micro pips) greater than " + mql4.DoubleToString(context.getPercentageOfATRForMaxVolatility(), 2) + "% of ATR (" + mql4.IntegerToString(ATRPips) + " micro pips)", true);
+                    context.setState(new TradeClosed(context, mql4));
                 }
                 else
-                //Range is above risk level, but below max volatility level. Current Ask price is larger than entry level.  
-                if (((rangeHigh - rangeLow) < ((context.getPercentageOfATRForMaxVolatility() / 100.00) * context.getATR())) &&
-                     (mql4.Ask > rangeLow + context.getATR() * (context.getPercentageOfATRForMaxRisk() / 100.00) + buffer))
                 {
+                    double entryPrice = 0.0;
+                    double stopLoss = 0.0;
+                    double cancelPrice = 0.0;
+                    int orderType = -1;
+                    TradeState nextState = null;
+                    double positionSize = 0;
+                    //Range is less than max risk
+                    if ((rangeHigh - rangeLow) < ((context.getPercentageOfATRForMaxRisk() / 100.00) * context.getATR()))
+                    {
 
-                    //write to log
-                    context.addLogEntry("Range (" + mql4.IntegerToString(rangePips) + " micro pips) is greater than max risk (" + mql4.DoubleToString(context.getPercentageOfATRForMaxRisk(), 2) +
-                                        "%) but less than max. volatility (" + mql4.DoubleToString(context.getPercentageOfATRForMaxVolatility(), 2) + "%) of ATR (" + mql4.IntegerToString(ATRPips) + " micro pips). Ask price is greater than entry price.", true);
+                        //write to log
+                        context.addLogEntry("Range " + mql4.IntegerToString(rangePips) + " is less than max risk (" + mql4.DoubleToString(context.getPercentageOfATRForMaxRisk(), 2) + "% of ATR (" + mql4.IntegerToString(ATRPips) + " micro pips))", true);
 
-                    entryPrice = rangeLow + context.getATR() * (context.getPercentageOfATRForMaxRisk() / 100.00) + buffer;
-                    stopLoss = rangeLow - buffer;
-                    cancelPrice = rangeLow + context.getATR() * context.getPercentageOfATRForMaxVolatility() / 100.00 + buffer; //cancel if above 20% of ATR
-                    orderType = MqlApi.OP_BUYLIMIT;
-                    context.setOrderType("BUY_LIMIT");
-                    nextState = new BuyLimitOrderOpened(context, mql4);
+                        entryPrice = rangeHigh;
+                        stopLoss = rangeLow;
+                        cancelPrice = rangeLow;
+                        orderType = MqlApi.OP_BUYSTOP;
+                        context.setOrderType("BUY_STOP");
+                        nextState = new StopBuyOrderOpened(context, mql4);
+                    }
+                    else
+                    //Range is above risk level, but below max volatility level. 
+                    if ((rangeHigh - rangeLow) < ((context.getPercentageOfATRForMaxVolatility() / 100.00) * context.getATR()))
+                    {
 
-                }
-                else
-                //Range is above risk level, but below max volatility level. Current Ask price is less than entry level.  
-                if (((rangeHigh - rangeLow) < ((context.getPercentageOfATRForMaxVolatility() / 100.00) * context.getATR())) &&
-                     (mql4.Ask < rangeLow + context.getATR() * (context.getPercentageOfATRForMaxRisk() / 100.00) + buffer))
-                {
+                        //write to log
+                        context.addLogEntry("Range (" + mql4.IntegerToString(rangePips) + " micro pips) is greater than max risk (" + mql4.DoubleToString(context.getPercentageOfATRForMaxRisk(), 2) +
+                                            "%) but less than max. volatility (" + mql4.DoubleToString(context.getPercentageOfATRForMaxVolatility(), 2) + "%) of ATR (" + mql4.IntegerToString(ATRPips) + " micro pips). Waiting for break below range low", true);
 
-                    //write to log
-                    context.addLogEntry("Range (" + mql4.IntegerToString(rangePips) + " micro pips) is greater than max risk " + mql4.DoubleToString(context.getPercentageOfATRForMaxRisk(), 2) +
-                                       "% but less than max. volatility " + mql4.DoubleToString(context.getPercentageOfATRForMaxVolatility(), 2) + "% of ATR (" + mql4.IntegerToString(ATRPips) + " micro pips). Ask price is less than entry price.", true);
-
-                    entryPrice = rangeLow + context.getATR() * (context.getPercentageOfATRForMaxRisk() / 100.00) + buffer;
-                    stopLoss = rangeLow - buffer;
-                    cancelPrice = rangeLow - buffer;
-                    orderType = MqlApi.OP_BUYSTOP;
-                    context.setOrderType("BUY_STOP");
-                    nextState = new StopBuyOrderOpened(context, mql4);
-                }
-
-                //only place order if entryPrice was calculated. I.e., if any of the three previous if/else cases was exercised. 
-                if (entryPrice != 0.0)
-                {
-                    int riskPips = (int)(mql4.MathAbs(stopLoss - entryPrice) * factor);
+                        entryPrice = rangeLow + context.getATR() * (context.getPercentageOfATRForMaxRisk() / 100.00);
+                        stopLoss = rangeLow;
+                        cancelPrice = rangeLow + context.getATR() * context.getPercentageOfATRForMaxVolatility() / 100.00; //cancel if below 20% of ATR
+                        orderType = MqlApi.OP_BUYLIMIT;
+                        context.setOrderType("BUY_LIMIT");
+                        int riskPips = (int)(mql4.MathAbs(stopLoss - entryPrice) * factor);
+                        //TODO Parametrize Risk
+                        double riskCapital = mql4.AccountBalance() * 0.0075; ///Parametrize
+                        positionSize = Math.Round(OrderManager.getLotSize(riskCapital, riskPips, mql4), context.getLotDigits(), MidpointRounding.AwayFromZero);
+                        context.setState(new WaitForBreakToPlaceLimitOrder(context, orderType, rangeLow, rangeHigh, entryPrice, cancelPrice, positionSize, mql4));
+                        return;
+                    }
+                    
+                    //only place order if entryPrice was calculated. I.e., if any of the three previous if/else cases was exercised. 
+                    if (entryPrice != 0.0)
+                    {
+                        int riskPips = (int)(mql4.MathAbs(stopLoss - entryPrice) * factor);
                         //TODO Parametrize Risk
                         double riskCapital = mql4.AccountBalance() * 0.0075;
-                    positionSize = Math.Round(OrderManager.getLotSize(riskCapital, riskPips, mql4), context.getLotDigits(),MidpointRounding.AwayFromZero);
+                        positionSize = Math.Round(OrderManager.getLotSize(riskCapital, riskPips, mql4), context.getLotDigits(), MidpointRounding.AwayFromZero);
 
-                    context.addLogEntry("AccountBalance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2) + "; Risk Capital: $" + mql4.DoubleToString(riskCapital, 2) + "; Risk pips: " + mql4.DoubleToString(riskPips, 2) + " micro pips; Position Size: " + mql4.DoubleToString(positionSize, 2) + " lots; Pip value: " + mql4.DoubleToString(OrderManager.getPipValue(mql4), mql4.Digits), true);
+                        context.addLogEntry("AccountBalance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2) + "; Risk Capital: $" + mql4.DoubleToString(riskCapital, 2) + "; Risk pips: " + mql4.DoubleToString(riskPips, 2) + " micro pips; Position Size: " + mql4.DoubleToString(positionSize, 2) + " lots; Pip value: " + mql4.DoubleToString(OrderManager.getPipValue(mql4), mql4.Digits), true);
 
-                    //place Order
-                    ErrorType result = context.Order.submitNewOrder(orderType, entryPrice, stopLoss, 0, cancelPrice, positionSize);
+                        //place Order
+                        ErrorType result = context.Order.submitNewOrder(orderType, entryPrice, stopLoss, 0, cancelPrice, positionSize);
 
-                    context.setStartingBalance(mql4.AccountBalance());
-                    context.setOrderPlacedDate(mql4.TimeCurrent());
-                    context.setSpreadOrderOpen((int)mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_SPREAD));
-                    context.setAskPriceBeforeOrderEntry(mql4.Ask);
-                    context.setBidPriceBeforeOrderEntry(mql4.Bid);
-                    context.setCancelPrice(cancelPrice);
+                        context.setStartingBalance(mql4.AccountBalance());
+                        context.setOrderPlacedDate(mql4.TimeCurrent());
+                        context.setSpreadOrderOpen((int)mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_SPREAD));
+                        context.setAskPriceBeforeOrderEntry(mql4.Ask);
+                        context.setBidPriceBeforeOrderEntry(mql4.Bid);
+                        context.setCancelPrice(cancelPrice);
                         context.setPlannedEntry(entryPrice);
                         context.setStopLoss(stopLoss);
                         context.setOriginalStopLoss(stopLoss);
@@ -163,50 +160,50 @@ namespace biiuse
                         context.setPositionSize(positionSize);
 
                         if (result == ErrorType.NO_ERROR)
-                    {
-                        context.setInitialProfitTarget(Math.Round(context.getPlannedEntry() + ((context.getPlannedEntry() - context.getStopLoss()) * (context.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
-                        context.setState(nextState);
-                        context.addLogEntry("Order successfully placed. Initial Profit target is: " + mql4.DoubleToString(context.getInitialProfitTarget(), mql4.Digits) + " (" + mql4.IntegerToString((int)(mql4.MathAbs(context.getInitialProfitTarget() - context.getPlannedEntry()) * factor)) + " micro pips)" + " Risk is: " + mql4.IntegerToString((int)riskPips) + " micro pips", true);
-                        return;
-                    }
-                    if ((result == ErrorType.RETRIABLE_ERROR) && (context.getOrderTicket() == -1))
-                    {
-                        context.addLogEntry("Order entry failed. Error code: " + mql4.IntegerToString(mql4.GetLastError()) + ". Will re-try at next tick", true);
-                        return;
-                    }
+                        {
+                            context.setInitialProfitTarget(Math.Round(context.getPlannedEntry() + ((context.getPlannedEntry() - context.getStopLoss()) * (context.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
+                            context.setState(nextState);
+                            context.addLogEntry("Order successfully placed. Initial Profit target is: " + mql4.DoubleToString(context.getInitialProfitTarget(), mql4.Digits) + " (" + mql4.IntegerToString((int)(mql4.MathAbs(context.getInitialProfitTarget() - context.getPlannedEntry()) * factor)) + " micro pips)" + " Risk is: " + mql4.IntegerToString((int)riskPips) + " micro pips", true);
+                            return;
+                        }
+                        if ((result == ErrorType.RETRIABLE_ERROR) && (context.getOrderTicket() == -1))
+                        {
+                            context.addLogEntry("Order entry failed. Error code: " + mql4.IntegerToString(mql4.GetLastError()) + ". Will re-try at next tick", true);
+                            return;
+                        }
 
-                    //this should never happen...
-                    if ((context.getOrderTicket() != -1) && ((result == ErrorType.RETRIABLE_ERROR) || (result ==ErrorType.NON_RETRIABLE_ERROR)))
-                    {
-                        context.addLogEntry("Error ocured but order is still open. Error code: " + mql4.IntegerToString(mql4.GetLastError()) + ". Continue with trade. Initial Profit target is: " + mql4.DoubleToString(context.getInitialProfitTarget(), mql4.Digits) + " (" + mql4.IntegerToString((int)(mql4.MathAbs(context.getInitialProfitTarget() - context.getPlannedEntry()) * factor)) + " micro pips)" + " Risk is: " + mql4.IntegerToString((int)riskPips) + " micro pips", true);
-                        context.setInitialProfitTarget(Math.Round(context.getPlannedEntry() + ((context.getPlannedEntry() - context.getStopLoss()) * (context.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
-                        context.setState(nextState);
-                        return;
-                    }
+                        //this should never happen...
+                        if ((context.getOrderTicket() != -1) && ((result == ErrorType.RETRIABLE_ERROR) || (result == ErrorType.NON_RETRIABLE_ERROR)))
+                        {
+                            context.addLogEntry("Error ocured but order is still open. Error code: " + mql4.IntegerToString(mql4.GetLastError()) + ". Continue with trade. Initial Profit target is: " + mql4.DoubleToString(context.getInitialProfitTarget(), mql4.Digits) + " (" + mql4.IntegerToString((int)(mql4.MathAbs(context.getInitialProfitTarget() - context.getPlannedEntry()) * factor)) + " micro pips)" + " Risk is: " + mql4.IntegerToString((int)riskPips) + " micro pips", true);
+                            context.setInitialProfitTarget(Math.Round(context.getPlannedEntry() + ((context.getPlannedEntry() - context.getStopLoss()) * (context.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
+                            context.setState(nextState);
+                            return;
+                        }
 
-                    if ((result == ErrorType.NON_RETRIABLE_ERROR) && (context.getOrderTicket() == -1))
-                    {
-                        context.addLogEntry("Non-recoverable error occurred. Errorcode: " + mql4.IntegerToString(mql4.GetLastError()) + ". Trade will be canceled", true);
-                        context.setState(new TradeClosed(context, mql4));
-                        return;
-                    }
-                } //end for if that checks if entryPrice is != 0.0
-            } //end else (that checks for general trade eligibility)
-        } //end if for range delay check
-    }
-
-    private bool isNewBar()
-    {
-        DateTime curbar = mql4.Time[0];
-        if (lastbar != curbar)
-        {
-            lastbar = curbar;
-            return (true);
+                        if ((result == ErrorType.NON_RETRIABLE_ERROR) && (context.getOrderTicket() == -1))
+                        {
+                            context.addLogEntry("Non-recoverable error occurred. Errorcode: " + mql4.IntegerToString(mql4.GetLastError()) + ". Trade will be canceled", true);
+                            context.setState(new TradeClosed(context, mql4));
+                            return;
+                        }
+                    } //end for if that checks if entryPrice is != 0.0
+                } //end else (that checks for general trade eligibility)
+            } //end if for range delay check
         }
-        else
+
+        private bool isNewBar()
         {
-            return (false);
+            DateTime curbar = mql4.Time[0];
+            if (lastbar != curbar)
+            {
+                lastbar = curbar;
+                return (true);
+            }
+            else
+            {
+                return (false);
+            }
         }
     }
-}
 }
