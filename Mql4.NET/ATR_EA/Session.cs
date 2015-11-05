@@ -27,6 +27,7 @@ namespace biiuse
             this.dateOfHighestHigh = new DateTime();
             this.dateOfLowestLow = new DateTime();
             this.atr = 0;
+            this.atr2D = 0;
 
             if (this.isTradingAllowed)
             {
@@ -82,6 +83,7 @@ namespace biiuse
                 //get shift for session start
                 int indexOfSessionStart = mql4.iBarShift(mql4.Symbol(), MqlApi.PERIOD_H1, this.sessionStartDateTime, true);
 
+                //calculate regular ATR
                 decimal sum = 0;
                 decimal _tenDayHigh = 0;
                 decimal _tenDayLow = 9999;
@@ -103,6 +105,21 @@ namespace biiuse
                 this.atr = (double) sum / 10.0d;
                 this.tenDayHigh = (double) _tenDayHigh;
                 this.tenDayLow = (double) _tenDayLow;
+
+                //calculate 2D ATR
+
+
+                sum = 0;
+                for (i = 0; i < 10; ++i)
+                {
+                    decimal periodHigh = (decimal)mql4.iHigh(mql4.Symbol(), MqlApi.PERIOD_H1, mql4.iHighest(mql4.Symbol(), MqlApi.PERIOD_H1, MqlApi.MODE_HIGH, 48, (indexOfSessionStart + i * 24) + 1));
+                    decimal periodLow = (decimal)mql4.iLow(mql4.Symbol(), MqlApi.PERIOD_H1, mql4.iLowest(mql4.Symbol(), MqlApi.PERIOD_H1, MqlApi.MODE_LOW, 48, (indexOfSessionStart + i * 24) + 1));
+
+                    sum = sum + (periodHigh - periodLow);
+
+                }
+
+                this.atr2D = (double)sum / 10.0d;
 
             } //end if TradingAllowed
         }
@@ -212,7 +229,10 @@ namespace biiuse
 
         public double getATR()
         {
-            return this.atr;
+            ///Parametrize such that we can easily switch between the different ATRs
+            return this.atr2D;
+            //return this.atr;
+
         }
 
         public int getID()
@@ -247,6 +267,7 @@ namespace biiuse
         private double lowestLow;
         private DateTime dateOfLowestLow;
         private double atr;
+        private double atr2D;
         private int HHLL_Threshold;
         private bool isTradingAllowed;
         private double tenDayLow;
