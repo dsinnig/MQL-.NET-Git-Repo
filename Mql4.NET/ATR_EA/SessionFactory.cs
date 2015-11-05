@@ -9,98 +9,99 @@ namespace biiuse
 {
     class SessionFactory
     {
-
+        //This will only work for FXCM properly. Or any broker with exactly 5 trading days. 
         public static Session getCurrentSession(int aLengthOfSundaySession, int aHHLL_Threshold, MqlApi mql4)
         {
             //TODO Change Session length determination logic
             int aLengthOfSundaySessionInHours = TimeSpan.FromSeconds(aLengthOfSundaySession).Hours;
             System.DateTime weekStartTime = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, detectWeekStartShift(mql4));
-            System.DateTime previousFridayStartTime = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, detectWeekStartShift(mql4) + (24 - aLengthOfSundaySessionInHours));
             System.DateTime currentTime = mql4.TimeCurrent();
-            int fullDayInSeconds = 60 * 60 * 24;
-            TimeSpan timeElapsedSinceWeekStart = currentTime - weekStartTime;
 
-            if (timeElapsedSinceWeekStart < TimeSpan.FromSeconds(aLengthOfSundaySession))
-            {
-                if ((currentSession == null) || (currentSession.getID() != 0))
-                {
-                    currentSession = new Session(0, "SUNDAY", weekStartTime, weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession), new DateTime(), false, 0, mql4);
-                }
-                return currentSession;
-            }
-            else if (timeElapsedSinceWeekStart < TimeSpan.FromSeconds(aLengthOfSundaySession + 1 * fullDayInSeconds))
-            {
-                if ((currentSession == null) || (currentSession.getID() != 1))
-                {
-                    currentSession = new Session(1, "MONDAY", weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession), weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + fullDayInSeconds), previousFridayStartTime, true, aHHLL_Threshold, mql4);
-                }
-                return currentSession;
-            }
-            else if (timeElapsedSinceWeekStart < TimeSpan.FromSeconds(aLengthOfSundaySession + 2 * fullDayInSeconds))
-            {
-                if ((currentSession == null) || (currentSession.getID() != 2))
-                {
-                    currentSession = new Session(2, "TUESDAY", weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + fullDayInSeconds), weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + 2 * fullDayInSeconds), weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession), true, aHHLL_Threshold, mql4);
-                }
-                return currentSession;
-            }
-            else if (timeElapsedSinceWeekStart < TimeSpan.FromSeconds(aLengthOfSundaySession + 3 * fullDayInSeconds))
-            {
-                if ((currentSession == null) || (currentSession.getID() != 3))
-                {
-                    currentSession = new Session(3, "WEDNESDAY", weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + 2 * fullDayInSeconds), weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + 3 * fullDayInSeconds), weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + fullDayInSeconds), true, aHHLL_Threshold, mql4);
-                }
-                return currentSession;
-            }
-            else if (timeElapsedSinceWeekStart < TimeSpan.FromSeconds(aLengthOfSundaySession + 4 * fullDayInSeconds))
-            {
-                if ((currentSession == null) || (currentSession.getID() != 4))
-                {
-                    currentSession = new Session(4, "THURSDAY", weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + 3 * fullDayInSeconds), weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + 4 * fullDayInSeconds), weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + 2 * fullDayInSeconds), true, aHHLL_Threshold, mql4);
-                }
-                return currentSession;
-            }
-            else if (timeElapsedSinceWeekStart < TimeSpan.FromSeconds(aLengthOfSundaySession + 4 * fullDayInSeconds + (fullDayInSeconds - aLengthOfSundaySession)))
-            {
-                if ((currentSession == null) || (currentSession.getID() != 5))
-                {
-                    currentSession = new Session(5, "FRIDAY", weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + 4 * fullDayInSeconds), weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + 4 * fullDayInSeconds + (fullDayInSeconds - aLengthOfSundaySession)), weekStartTime + TimeSpan.FromSeconds(aLengthOfSundaySession + 3 * fullDayInSeconds), true, aHHLL_Threshold, mql4);
-                }
-                return currentSession;
-            }
-            else
-            {
-                if ((currentSession == null) || (currentSession.getID() != -1))
-                {
-                    currentSession = new Session(-1, "UNKNOWN", new DateTime(), new DateTime(), new DateTime(), false, 0, mql4);
 
-                }
-                return currentSession;
-            }
-        }
+            System.DateTime startOfCurrentSession = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0);
+            System.DayOfWeek weekday = startOfCurrentSession.DayOfWeek;
 
-        static private int detectWeekStartShift(MqlApi mql4)
+            switch (currentTime.DayOfWeek)
+            {
+                case DayOfWeek.Monday:
+                    {
+                        if ((currentSession == null) || (currentSession.getID() != 1))
+                        {
+                            ///Take out session end time. It's hard to calculate and not used currently. 
+                            currentSession = new Session(1, "MONDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1), true, aHHLL_Threshold, mql4);
+                        }
+                        break;
+                    }
+                case DayOfWeek.Tuesday:
+                    {
+                        if ((currentSession == null) || (currentSession.getID() != 2))
+                        {
+                            ///Take out session end time. It's hard to calculate and not used currently. 
+                            currentSession = new Session(2, "TUESDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1), true, aHHLL_Threshold, mql4);
+                        }
+                        break;
+
+                    }
+                case DayOfWeek.Wednesday:
+                    {
+                        if ((currentSession == null) || (currentSession.getID() != 3))
+                        {
+                            ///Take out session end time. It's hard to calculate and not used currently. 
+                            currentSession = new Session(3, "WEDNESDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1), true, aHHLL_Threshold, mql4);
+                        }
+                        break;
+
+                    }
+                case DayOfWeek.Thursday:
+                    {
+                        if ((currentSession == null) || (currentSession.getID() != 4))
+                        {
+                            ///Take out session end time. It's hard to calculate and not used currently. 
+                            currentSession = new Session(4, "THURSDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1), true, aHHLL_Threshold, mql4);
+                        }
+                        break;
+
+                    }
+                case DayOfWeek.Friday:
+                    {
+                        if ((currentSession == null) || (currentSession.getID() != 5))
+                            ///Take out session end time. It's hard to calculate and not used currently. 
+                            currentSession = new Session(5, "FRIDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1), true, aHHLL_Threshold, mql4);
+                        break;
+                    }
+
+                default:
+                    {
+                        currentSession = new Session(-1, "UNKNOWN", new DateTime(), new DateTime(), new DateTime(), false, 0, mql4);
+                        break;
+                    }
+            }
+            return currentSession;
+    }
+
+
+static private int detectWeekStartShift(MqlApi mql4)
+{
+    int i = 0;
+    bool shiftDetected = false;
+    while (i < 168)
+    {
+        if (mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, i) - mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, i + 1) > TimeSpan.FromSeconds(4 * 60 * 60))
         {
-            int i = 0;
-            bool shiftDetected = false;
-            while (i < 168)
-            {
-                if (mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, i) - mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, i + 1) > TimeSpan.FromSeconds(4 * 60 * 60))
-                {
-                    shiftDetected = true;
-                    break;
-                }
-                ++i;
-            }
-
-            if (shiftDetected) return i;
-            else
-            {
-                mql4.Print("Unable to detect weekstart - abort");
-                return -1;
-            }
+            shiftDetected = true;
+            break;
         }
+        ++i;
+    }
 
-        private static Session currentSession = null;
+    if (shiftDetected) return i;
+    else
+    {
+        mql4.Print("Unable to detect weekstart - abort");
+        return -1;
+    }
+}
+
+private static Session currentSession = null;
     }
 }
