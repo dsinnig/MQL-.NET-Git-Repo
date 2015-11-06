@@ -37,7 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="nquotes">
-      <HintPath>..\..\..\..\..\..\..\..\..\..\..\Program Files (x86)\OANDA - MetaTrader\mql4\Libraries\nquotes\nquotes.dll</HintPath>
+      <HintPath>..\..\..\..\..\AppData\Roaming\MetaQuotes\Terminal\BB190E062770E27C3E79391AB0D1A117\MQL4\Libraries\nquotes\nquotes.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -79,7 +79,7 @@
   <Import Project="..\Common\Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetPath)" "C:\Program Files (x86)\FXCM MetaTrader 4\MQL4\Experts" /y</PostBuildEvent>
+    <PostBuildEvent>xcopy "$(TargetPath)" "C:\Users\USER\AppData\Roaming\MetaQuotes\Terminal\BB190E062770E27C3E79391AB0D1A117\MQL4\Experts" /y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
