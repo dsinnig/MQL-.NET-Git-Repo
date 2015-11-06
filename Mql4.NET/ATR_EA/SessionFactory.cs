@@ -28,7 +28,7 @@ namespace biiuse
                         if ((currentSession == null) || (currentSession.getID() != 1))
                         {
                             ///Take out session end time. It's hard to calculate and not used currently. 
-                            currentSession = new Session(1, "MONDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1), true, aHHLL_Threshold, mql4);
+                            currentSession = new Session(1, "MONDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0) - TimeSpan.FromDays(3), true, aHHLL_Threshold, mql4);
                         }
                         break;
                     }
@@ -65,15 +65,20 @@ namespace biiuse
                 case DayOfWeek.Friday:
                     {
                         if ((currentSession == null) || (currentSession.getID() != 5))
+                        {
                             ///Take out session end time. It's hard to calculate and not used currently. 
                             currentSession = new Session(5, "FRIDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1), true, aHHLL_Threshold, mql4);
-                        break;
+                        }
+                            break;
                     }
 
                 default:
                     {
-                        currentSession = new Session(-1, "UNKNOWN", new DateTime(), new DateTime(), new DateTime(), false, 0, mql4);
-                        break;
+                        if ((currentSession == null) || (currentSession.getID() != -1))
+                        {
+                            currentSession = new Session(-1, "UNKNOWN", new DateTime(), new DateTime(), new DateTime(), false, 0, mql4);
+                        }
+                            break;
                     }
             }
             return currentSession;
