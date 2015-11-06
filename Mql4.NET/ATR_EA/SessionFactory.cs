@@ -9,6 +9,9 @@ namespace biiuse
 {
     class SessionFactory
     {
+        
+        
+        
         //This will only work for FXCM properly. Or any broker with exactly 5 trading days. 
         public static Session getCurrentSession(int aLengthOfSundaySession, int aHHLL_Threshold, MqlApi mql4)
         {
@@ -18,8 +21,8 @@ namespace biiuse
             System.DateTime currentTime = mql4.TimeCurrent();
 
 
-            System.DateTime startOfCurrentSession = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0);
-            System.DayOfWeek weekday = startOfCurrentSession.DayOfWeek;
+            //System.DateTime startOfCurrentSession = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0);
+            System.DayOfWeek weekday = currentTime.DayOfWeek;
 
             switch (currentTime.DayOfWeek)
             {
@@ -91,7 +94,7 @@ static private int detectWeekStartShift(MqlApi mql4)
     bool shiftDetected = false;
     while (i < 168)
     {
-        if (mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, i) - mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, i + 1) > TimeSpan.FromSeconds(4 * 60 * 60))
+        if ((mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, i) - mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, i + 1) > TimeSpan.FromSeconds(4 * 60 * 60)) || (mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, i + 1).DayOfWeek == DayOfWeek.Sunday))
         {
             shiftDetected = true;
             break;
