@@ -10,8 +10,6 @@ namespace biiuse
     class SessionFactory
     {
         
-        
-        
         //This will only work for FXCM properly. Or any broker with exactly 5 trading days. 
         public static Session getCurrentSession(int aLengthOfSundaySession, int aHHLL_Threshold, MqlApi mql4)
         {

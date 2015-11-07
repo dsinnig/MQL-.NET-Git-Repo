@@ -35,6 +35,7 @@ namespace biiuse
         private bool movAveragePriceCrossOver;
         private bool movAverageCrossOver;
         private string orderType;
+        private double currentDailyRange;       
         private Session referenceSession;
 
         public ATRTrade(bool sim, int _lotDigits, string _logFileName, double _newHHLL, double _ATR, int _lengthIn1MBarsOfWaitingPeriod, double _percentageOfATRForMaxRisk, double _percentageOfATRForMaxVolatility,
@@ -55,6 +56,8 @@ namespace biiuse
             this.newHHLL = _newHHLL;
             this.tenDayRange = _tenDayRange;
             this.referenceSession = referenceSession;
+            this.currentDailyRange = mql4.iHigh(null, MqlApi.PERIOD_D1, 0) - mql4.iLow(null, MqlApi.PERIOD_D1, 0);
+            mql4.Print("CurrentDailyRange Daily range is: ", currentDailyRange * OrderManager.getPipConversionFactor(mql4));
         }
 
         public double getATR()
@@ -291,6 +294,11 @@ namespace biiuse
             return this.orderType;
         }
 
+        public double getCurrentDailyRange()
+        {
+            return this.currentDailyRange;
+        }
+
         public override void writeLogToCSV()
         {
             mql4.ResetLastError();
@@ -303,7 +311,7 @@ namespace biiuse
             //if first entry, write column headers
             if (mql4.FileTell(filehandle) == 0)
             {
-                output = "TRADE_ID, ORDER_TICKET, TRADE_TYPE, SYMBOL, ATR, HH/LL, REF_PRICE, TRADE_OPENED_DATE, RANGE_HIGH, RANGE_LOW, RANGE_PIPS, ORDER_PLACED_DATE, ORDER_TYPE, ASK_MARKET_PRICE_AT_ORDER_PLACEMENT, BID_MARKET_PRICE_AT_ORDER_PLACEMENT, 10_DAY_RANGE, RSI, RSI_5M, RSI_15M, RSI_30M, MOMENTUM, MOMENTUM_5M, MOMENTUM_15, MOMENTUM_30, STOCH, STOCH_5M, STOCH_15, STOCH_30, STARTING_BALANCE, PLANNED_ENTRY, ORDER_FILLED_DATE, ACTUAL_ENTRY, SPREAD_ORDER_OPEN, INITIAL_STOP_LOSS, REVISED_STOP_LOSS, INITIAL_TAKE_PROFIT, REVISED TAKE_PROFIT, CANCEL_PRICE, ACTUAL_CLOSE, SPREAD_ORDER_CLOSE, POSITION_SIZE, REALIZED PL, COMMISSION, SWAP, ENDING_BALANCE, TRADE_CLOSED_DATE";
+                output = "TRADE_ID, ORDER_TICKET, TRADE_TYPE, SYMBOL, ATR, HH/LL, REF_PRICE, TRADE_OPENED_DATE, RANGE_HIGH, RANGE_LOW, RANGE_PIPS, ORDER_PLACED_DATE, ORDER_TYPE, ASK_MARKET_PRICE_AT_ORDER_PLACEMENT, BID_MARKET_PRICE_AT_ORDER_PLACEMENT, 10_DAY_RANGE, CUR_DAILY_RANGE, RSI, RSI_5M, RSI_15M, RSI_30M, MOMENTUM, MOMENTUM_5M, MOMENTUM_15, MOMENTUM_30, STOCH, STOCH_5M, STOCH_15, STOCH_30, STARTING_BALANCE, PLANNED_ENTRY, ORDER_FILLED_DATE, ACTUAL_ENTRY, SPREAD_ORDER_OPEN, INITIAL_STOP_LOSS, REVISED_STOP_LOSS, INITIAL_TAKE_PROFIT, REVISED TAKE_PROFIT, CANCEL_PRICE, ACTUAL_CLOSE, SPREAD_ORDER_CLOSE, POSITION_SIZE, REALIZED PL, COMMISSION, SWAP, ENDING_BALANCE, TRADE_CLOSED_DATE";
 
                 mql4.FileWriteString(filehandle, output, output.Length);
             }
@@ -311,7 +319,7 @@ namespace biiuse
             int indexOfReferenceStart = mql4.iBarShift(mql4.Symbol(), MqlApi.PERIOD_H1, this.referenceSession.getHHLL_ReferenceDateTime(), true);
             double priceAtRefStart = mql4.iClose(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfReferenceStart);
 
-            output = this.id + ", " + this.orderTicket + ", " + tradeType + ", " + mql4.Symbol() + ", " + this.atr * OrderManager.getPipConversionFactor(mql4) + ", " + this.newHHLL + ", " + priceAtRefStart + ", " + ExcelUtil.datetimeToExcelDate(this.tradeOpenedDate) + ", " + this.rangeHigh + ", " + this.rangeLow + ", " + this.rangePips + ", " + ExcelUtil.datetimeToExcelDate(this.orderPlacedDate) + ", " + this.orderType + ", " + this.askPriceBeforeOrderEntry + ", " + this.bidPriceBeforeOrderEntry + ", " + this.tenDayRange * OrderManager.getPipConversionFactor(mql4) + ", " + this.RSI + ", " + this.RSI_5M + ", " + this.RSI_15M + ", " + this.RSI_30M + ", " + this.momentum + ", " + this.momentum_5M + ", " + this.momentum_15M + ", " + this.momentum_30M + ", " + this.stochastics + ", " + this.stochastics5M + ", " + this.stochastics15M + ", " + this.stochastics30M + ", " + this.startingBalance + ", " + this.plannedEntry + ", " + ExcelUtil.datetimeToExcelDate(this.orderFilledDate) + ", " + this.actualEntry + ", " + this.spreadOrderOpen + ", " + this.originalStopLoss + ", " + this.stopLoss + ", " + this.initialProfitTarget + ", " + this.takeProfit + ", " + this.cancelPrice + ", " + this.actualClose + ", " + this.spreadOrderClose + ", " + this.positionSize + ", " + this.realizedPL + ", " + this.commission + ", " + this.swap + ", " + this.endingBalance + ", " + ExcelUtil.datetimeToExcelDate(this.tradeClosedDate);
+            output = this.id + ", " + this.orderTicket + ", " + tradeType + ", " + mql4.Symbol() + ", " + this.atr * OrderManager.getPipConversionFactor(mql4) + ", " + this.newHHLL + ", " + priceAtRefStart + "," + ExcelUtil.datetimeToExcelDate(this.tradeOpenedDate) + ", " + this.rangeHigh + ", " + this.rangeLow + ", " + this.rangePips + "," + ExcelUtil.datetimeToExcelDate(this.orderPlacedDate) + ", " + this.orderType + ", " + this.askPriceBeforeOrderEntry + ", " + this.bidPriceBeforeOrderEntry + ", " + this.tenDayRange * OrderManager.getPipConversionFactor(mql4) + ", " + this.currentDailyRange * OrderManager.getPipConversionFactor(mql4) + ", " + this.RSI + ", " + this.RSI_5M + ", " + this.RSI_15M + ", " + this.RSI_30M + ", " + this.momentum + ", " + this.momentum_5M + ", " + this.momentum_15M + ", " + this.momentum_30M + ", " + this.stochastics + ", " + this.stochastics5M + ", " + this.stochastics15M + ", " + this.stochastics30M + ", " + this.startingBalance + ", " + this.plannedEntry + "," + ExcelUtil.datetimeToExcelDate(this.orderFilledDate) + ", " + this.actualEntry + ", " + this.spreadOrderOpen + ", " + this.originalStopLoss + ", " + this.stopLoss + ", " + this.initialProfitTarget + ", " + this.takeProfit + ", " + this.cancelPrice + ", " + this.actualClose + ", " + this.spreadOrderClose + ", " + this.positionSize + ", " + this.realizedPL + ", " + this.commission + ", " + this.swap + ", " + this.endingBalance + "," + ExcelUtil.datetimeToExcelDate(this.tradeClosedDate);
 
             mql4.FileWriteString(filehandle, "\n", 1);
             mql4.FileWriteString(filehandle, output, output.Length);
