@@ -122,7 +122,7 @@ namespace biiuse
 
                         entryPrice = rangeLow + context.getATR() * (context.getPercentageOfATRForMaxRisk() / 100.00);
                         stopLoss = rangeLow;
-                        cancelPrice = rangeLow + context.getATR() * context.getPercentageOfATRForMaxVolatility() / 100.00; //cancel if below 20% of ATR
+                        cancelPrice = rangeLow + context.getATR() * context.getPercentageOfATRForMaxVolatility() / 100.00; //cancel if above 20% of ATR
                         orderType = MqlApi.OP_BUYLIMIT;
                         context.setOrderType("BUY_LIMIT");
                         int riskPips = (int)(mql4.MathAbs(stopLoss - entryPrice) * factor);
