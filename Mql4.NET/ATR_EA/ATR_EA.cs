@@ -6,7 +6,8 @@ namespace biiuse
 {
     class ATR_EA : NQuotes.MqlApi
     {
-        //TODO Add external paramters to wrapper mql4 file
+        [ExternVariable]
+        public double maxBalanceRisk = 0.75; //Max risk per trader relative to account balance (in %)
         [ExternVariable]
         public int sundayLengthInHours = 7; //Length of Sunday session in hours
         [ExternVariable]

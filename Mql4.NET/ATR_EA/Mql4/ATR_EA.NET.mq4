@@ -26,6 +26,7 @@
 	int nquotes_get_property_adouble(string name, double& value[]);
 #import
 
+input double maxBalanceRisk = 0.75; //Max risk per trader relative to account balance (in %)
 input int sundayLengthInHours=7; //Length of Sunday session in hours
 input int HHLL_Threshold=60; //Time in minutes after last HH / LL before a tradeable HH/LL can occur
 input int lengthOfGracePeriod=10; //Length in 1M bars of Grace Period after a tradeable HH/LL occured
@@ -35,17 +36,20 @@ input double maxVolatility=20; //Max volatility (in percent of ATR)
 input double minProfitTarget=4; //Min Profit Target (in factors of the risk e.g., 3 = 3* Risk)
 input int rangeBuffer=20; //Buffer in micropips for order opening and closing
 input int lotDigits=1; //Lot size granularity (0 = full lots, 1 = mini lots, 2 = micro lots, etc).
-input int maxConsLoses=3; //Lot size granularity (0 = full lots, 1 = mini lots, 2 = micro lots, etc).
-input double maxATROR = 0.3; //max percent value for ATR / OR
+input int maxConsLoses=99; //Lot size granularity (0 = full lots, 1 = mini lots, 2 = micro lots, etc).
+input double maxATROR = 0.5; //max percent value for ATR / OR
 input double minATROR = 0; //min percent value for ATR / OR
+input double maxDRATR = 0.35; //max percent value for ATR / OR
+input double minDRATR = 0; //min percent value for ATR / OR
 input bool cutLossesBeforeATRFilter=true; //Flag whether the losing streak filter should take into account trades with invalid ATR OT 
 input string logFileName="tradeLog.csv"; //path and filename for CSV trade log
-
+   
 
 
 int init()
 {
 	nquotes_setup("biiuse.ATR_EA", "ATR_EA");
+	nquotes_set_property_double("maxBalanceRisk",maxBalanceRisk); 
 	nquotes_set_property_int("sundayLengthInHours",sundayLengthInHours); 
    nquotes_set_property_int("HHLL_Threshold",HHLL_Threshold); 
    nquotes_set_property_int("lengthOfGracePeriod",lengthOfGracePeriod); 
@@ -58,6 +62,8 @@ int init()
    nquotes_set_property_int("maxConsLoses",maxConsLoses);
    nquotes_set_property_double("maxATROR",maxATROR); 
    nquotes_set_property_double("minATROR",minATROR);  
+   nquotes_set_property_double("maxDRATR",maxDRATR); 
+   nquotes_set_property_double("minDRATR",minDRATR);  
    nquotes_set_property_bool("cutLossesBeforeATRFilter", cutLossesBeforeATRFilter);
    nquotes_set_property_string("logFileName",logFileName); 
    
