@@ -29,8 +29,9 @@
 input double maxBalanceRisk = 0.75; //Max risk per trader relative to account balance (in %)
 input int sundayLengthInHours=7; //Length of Sunday session in hours
 input int HHLL_Threshold=60; //Time in minutes after last HH / LL before a tradeable HH/LL can occur
-input int lengthOfGracePeriod=10; //Length in 1M bars of Grace Period after a tradeable HH/LL occured
+input int lengthOfGracePeriod=10; //Length in bars of Grace Period after a tradeable HH/LL occured
 input double rangeRestriction=80; //Min range of Grace Period
+input int lookBackSessions = 1; //Number of sessions to look back for establishing a new HH/LL
 input double maxRisk=10; //Max risk (in percent of ATR)
 input double maxVolatility=20; //Max volatility (in percent of ATR)
 input double minProfitTarget=4; //Min Profit Target (in factors of the risk e.g., 3 = 3* Risk)
@@ -54,6 +55,7 @@ int init()
    nquotes_set_property_int("HHLL_Threshold",HHLL_Threshold); 
    nquotes_set_property_int("lengthOfGracePeriod",lengthOfGracePeriod); 
    nquotes_set_property_double("rangeRestriction",rangeRestriction); 
+   nquotes_set_property_int("lookBackSessions",lookBackSessions); 
    nquotes_set_property_double("maxRisk",maxRisk); 
    nquotes_set_property_double("maxVolatility",maxVolatility); 
    nquotes_set_property_double("minProfitTarget",minProfitTarget); 

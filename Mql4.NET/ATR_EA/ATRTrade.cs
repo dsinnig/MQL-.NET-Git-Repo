@@ -3,8 +3,6 @@ namespace biiuse
 {
     internal class ATRTrade : Trade
     {
-
-
         private double tenDayRange;
         private double rangeHigh;
         private double rangeLow;

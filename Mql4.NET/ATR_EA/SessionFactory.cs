@@ -11,16 +11,18 @@ namespace biiuse
     {
         
         //This will only work for FXCM properly. Or any broker with exactly 5 trading days. 
-        public static Session getCurrentSession(int aLengthOfSundaySession, int aHHLL_Threshold, MqlApi mql4)
+        public static Session getCurrentSession(int aLengthOfSundaySession, int aHHLL_Threshold, int lookBackSessions, ATR_Type atrType, MqlApi mql4)
         {
             //TODO Change Session length determination logic
             int aLengthOfSundaySessionInHours = TimeSpan.FromSeconds(aLengthOfSundaySession).Hours;
             System.DateTime weekStartTime = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, detectWeekStartShift(mql4));
             System.DateTime currentTime = mql4.TimeCurrent();
 
-
             //System.DateTime startOfCurrentSession = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0);
             System.DayOfWeek weekday = currentTime.DayOfWeek;
+            int weekEndDelay;
+            if (weekendOverlap(weekday, lookBackSessions)) weekEndDelay = 2;
+            else weekEndDelay = 0;
 
             switch (currentTime.DayOfWeek)
             {
@@ -29,7 +31,7 @@ namespace biiuse
                         if ((currentSession == null) || (currentSession.getID() != 1))
                         {
                             ///Take out session end time. It's hard to calculate and not used currently. 
-                            currentSession = new Session(1, "MONDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0) - TimeSpan.FromDays(3), true, aHHLL_Threshold, mql4);
+                            currentSession = new Session(1, "MONDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0) - TimeSpan.FromDays(lookBackSessions+weekEndDelay), true, aHHLL_Threshold, atrType, mql4);
                         }
                         break;
                     }
@@ -38,7 +40,7 @@ namespace biiuse
                         if ((currentSession == null) || (currentSession.getID() != 2))
                         {
                             ///Take out session end time. It's hard to calculate and not used currently. 
-                            currentSession = new Session(2, "TUESDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1), true, aHHLL_Threshold, mql4);
+                            currentSession = new Session(2, "TUESDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1) - TimeSpan.FromDays(lookBackSessions + weekEndDelay-1), true, aHHLL_Threshold, atrType, mql4);
                         }
                         break;
 
@@ -48,7 +50,7 @@ namespace biiuse
                         if ((currentSession == null) || (currentSession.getID() != 3))
                         {
                             ///Take out session end time. It's hard to calculate and not used currently. 
-                            currentSession = new Session(3, "WEDNESDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1), true, aHHLL_Threshold, mql4);
+                            currentSession = new Session(3, "WEDNESDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1) - TimeSpan.FromDays(lookBackSessions + weekEndDelay-1), true, aHHLL_Threshold, atrType, mql4);
                         }
                         break;
 
@@ -58,7 +60,7 @@ namespace biiuse
                         if ((currentSession == null) || (currentSession.getID() != 4))
                         {
                             ///Take out session end time. It's hard to calculate and not used currently. 
-                            currentSession = new Session(4, "THURSDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1), true, aHHLL_Threshold, mql4);
+                            currentSession = new Session(4, "THURSDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1) - TimeSpan.FromDays(lookBackSessions + weekEndDelay-1), true, aHHLL_Threshold, atrType, mql4);
                         }
                         break;
 
@@ -68,7 +70,7 @@ namespace biiuse
                         if ((currentSession == null) || (currentSession.getID() != 5))
                         {
                             ///Take out session end time. It's hard to calculate and not used currently. 
-                            currentSession = new Session(5, "FRIDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1), true, aHHLL_Threshold, mql4);
+                            currentSession = new Session(5, "FRIDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 1) - TimeSpan.FromDays(lookBackSessions + weekEndDelay-1), true, aHHLL_Threshold, atrType, mql4);
                         }
                             break;
                     }
@@ -77,7 +79,7 @@ namespace biiuse
                     {
                         if ((currentSession == null) || (currentSession.getID() != -1))
                         {
-                            currentSession = new Session(-1, "UNKNOWN", new DateTime(), new DateTime(), new DateTime(), false, 0, mql4);
+                            currentSession = new Session(-1, "UNKNOWN", new DateTime(), new DateTime(), new DateTime(), false, 0, atrType, mql4);
                         }
                             break;
                     }
@@ -85,6 +87,25 @@ namespace biiuse
             return currentSession;
     }
 
+static int weekDayToNumber(DayOfWeek day)
+        {
+            switch (day)
+            {
+                case DayOfWeek.Monday: return 0;
+                case DayOfWeek.Tuesday: return 1;
+                case DayOfWeek.Wednesday: return 2;
+                case DayOfWeek.Thursday: return 3;
+                case DayOfWeek.Friday: return 4;
+                case DayOfWeek.Saturday: return 5;
+                case DayOfWeek.Sunday: return 6;
+            }
+            return 6;
+        }
+
+static private bool weekendOverlap(DayOfWeek currentDay, int lookBackSessions)
+        {
+            return (weekDayToNumber(currentDay) - lookBackSessions) < 0;
+        }
 
 static private int detectWeekStartShift(MqlApi mql4)
 {

@@ -2,9 +2,17 @@
 using NQuotes;
 namespace biiuse
 {
+
+    enum ATR_Type
+    {
+        DAY_TRADE_ORIG,
+        DAY_TRADE_2_DAYS,
+        SWING_TRADE_5_DAYS
+    }
+
     internal class Session : MQL4Wrapper
     {
-        public Session(int aSessionID, string aSessionName, DateTime aSessionStartDateTime, DateTime aSessionEndDateTime, DateTime aHHLL_ReferenceDateTime, bool tradingFlag, int aHHLLThreshold, MqlApi mql4) : base(mql4)
+        public Session(int aSessionID, string aSessionName, DateTime aSessionStartDateTime, DateTime aSessionEndDateTime, DateTime aHHLL_ReferenceDateTime, bool tradingFlag, int aHHLLThreshold, ATR_Type atrType, MqlApi mql4) : base(mql4)
         {
             this.sessionID = aSessionID;
             this.sessionName = aSessionName;
@@ -15,6 +23,7 @@ namespace biiuse
             this.HHLL_Threshold = aHHLLThreshold;
             this.highestHigh = -1;
             this.lowestLow = 9999999999;
+            this.atrType = atrType;
 
             initialize();
         }
@@ -28,6 +37,7 @@ namespace biiuse
             this.dateOfLowestLow = new DateTime();
             this.atr = 0;
             this.atr2D = 0;
+            this.atr5D = 0;
 
             if (this.isTradingAllowed)
             {
@@ -89,6 +99,8 @@ namespace biiuse
                 decimal _tenDayLow = 9999;
 
 
+
+
                 for (i = 0; i < 10; ++i)
                 {
 
@@ -108,7 +120,6 @@ namespace biiuse
 
                 //calculate 2D ATR
 
-
                 sum = 0;
                 for (i = 0; i < 10; ++i)
                 {
@@ -121,6 +132,26 @@ namespace biiuse
 
                 this.atr2D = (double)sum / 10.0d;
 
+                //calculate regular 5D ATR for Swing Trading
+                decimal _fiveDayHigh = 0;
+                decimal _fiveDayLow = 9999;
+
+
+
+
+                for (i = 0; i < 5; ++i)
+                {
+
+                    decimal periodHigh = (decimal)mql4.iHigh(mql4.Symbol(), MqlApi.PERIOD_H1, mql4.iHighest(mql4.Symbol(), MqlApi.PERIOD_H1, MqlApi.MODE_HIGH, 24, (indexOfSessionStart + i * 24) + 1));
+                    decimal periodLow = (decimal)mql4.iLow(mql4.Symbol(), MqlApi.PERIOD_H1, mql4.iLowest(mql4.Symbol(), MqlApi.PERIOD_H1, MqlApi.MODE_LOW, 24, (indexOfSessionStart + i * 24) + 1));
+
+                    if (periodHigh > _fiveDayHigh) _fiveDayHigh = periodHigh;
+                    if (periodLow < _fiveDayLow) _fiveDayLow = periodLow;
+
+                }
+
+                this.atr5D = (double) (_fiveDayHigh - _fiveDayLow);
+                
             } //end if TradingAllowed
         }
 
@@ -229,9 +260,15 @@ namespace biiuse
 
         public double getATR()
         {
-            ///Parametrize such that we can easily switch between the different ATRs
+            switch (atrType)
+            {
+                case ATR_Type.DAY_TRADE_ORIG: return this.atr;
+                case ATR_Type.DAY_TRADE_2_DAYS: return this.atr2D;
+                case ATR_Type.SWING_TRADE_5_DAYS: return this.atr5D;
+            }
+
+
             return this.atr2D;
-            //return this.atr;
 
         }
 
@@ -272,5 +309,7 @@ namespace biiuse
         private bool isTradingAllowed;
         private double tenDayLow;
         private double tenDayHigh;
+        private ATR_Type atrType;
+        private double atr5D;
     }
 }

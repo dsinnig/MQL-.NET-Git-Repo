@@ -13,9 +13,13 @@ namespace biiuse
         [ExternVariable]
         public int HHLL_Threshold = 60; //Time in minutes after last HH / LL before a tradeable HH/LL can occur
         [ExternVariable]
-        public int lengthOfGracePeriod = 10; //Length in 1M bars of Grace Period after a tradeable HH/LL occured
+        public int lengthOfGracePeriod = 10; //Length in bars of Grace Period after a tradeable HH/LL occured
         [ExternVariable]
         public double rangeRestriction = 00; //Min range of Grace Period
+        [ExternVariable]
+        public int lookBackSessions = 1; //Number of sessions to look back for establishing a new HH/LL
+        [ExternVariable]
+        public int atrTypeInInt = 0; //Use intToATRType to convert to proper Enum ATR_Type
         [ExternVariable]
         public double maxRisk = 10; //Max risk (in percent of ATR)
         [ExternVariable]
@@ -43,6 +47,7 @@ namespace biiuse
 
         public override int init()
         {
+            atrType = intToATR_Type(atrTypeInInt);
             sundayLengthInSeconds = 60 * 60 * sundayLengthInHours;
             trades = new List<Trade>();
 
@@ -58,7 +63,7 @@ namespace biiuse
 
         public override int start()
         {
-
+            
             //new bar?
 
             if (!bartime.Equals(Time[0]))
@@ -66,13 +71,13 @@ namespace biiuse
                 //TODO verify that identity makes it still work
                 bartime = Time[0];
 
-                Session newSession = SessionFactory.getCurrentSession(sundayLengthInSeconds, HHLL_Threshold, this);
+                Session newSession = SessionFactory.getCurrentSession(sundayLengthInSeconds, HHLL_Threshold, lookBackSessions, atrType, this);
                 if (currSession != newSession)
                 {
                     currSession = newSession;
 
                     currSession.writeToCSV("session_atr.csv");
-
+                    Print("Session start time: ", currSession.getSessionStartTime().ToLongTimeString());
                     if (!currSession.tradingAllowed())
                     {
                         Print(TimeCurrent(), " Start session: ", currSession.getName(), " NO NEW TRADES ALLOWED.");
@@ -376,10 +381,26 @@ namespace biiuse
             return base.deinit();
         }
 
+
+        private ATR_Type intToATR_Type(int atr)
+        {
+            switch (atr)
+            {
+                case 0: return ATR_Type.DAY_TRADE_ORIG;
+                case 1: return ATR_Type.DAY_TRADE_2_DAYS;
+                case 2: return ATR_Type.SWING_TRADE_5_DAYS;
+            }
+            return ATR_Type.DAY_TRADE_2_DAYS;
+        }
+
+
         private Session currSession = null;
         private static DateTime bartime = new DateTime();
         private int sundayLengthInSeconds;
         const int maxNumberOfTrades = 10000;
         List<Trade> trades;
+        private ATR_Type atrType;
     }
+
+    
 }
