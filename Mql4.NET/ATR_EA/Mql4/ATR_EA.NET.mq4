@@ -26,7 +26,7 @@
 	int nquotes_get_property_adouble(string name, double& value[]);
 #import
 
-input double maxBalanceRisk = 0.75; //Max risk per trader relative to account balance (in %)
+input double maxBalanceRisk = 0.0075; //Max risk per trader relative to account balance (in %)
 input int sundayLengthInHours=7; //Length of Sunday session in hours
 input int HHLL_Threshold=60; //Time in minutes after last HH / LL before a tradeable HH/LL can occur
 input int lengthOfGracePeriod=10; //Length in bars of Grace Period after a tradeable HH/LL occured

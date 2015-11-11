@@ -135,10 +135,6 @@ namespace biiuse
                 //calculate regular 5D ATR for Swing Trading
                 decimal _fiveDayHigh = 0;
                 decimal _fiveDayLow = 9999;
-
-
-
-
                 for (i = 0; i < 5; ++i)
                 {
 
@@ -155,6 +151,7 @@ namespace biiuse
             } //end if TradingAllowed
         }
 
+        
         public int update(double price)
         {
             if (this.isTradingAllowed)
@@ -162,7 +159,7 @@ namespace biiuse
                 if (price > this.highestHigh)
                 {
                     bool validHighestHigh = false;
-                    if ((mql4.TimeCurrent() - this.dateOfHighestHigh) > TimeSpan.FromSeconds((HHLL_Threshold * 60)))
+                    if ((mql4.TimeCurrent() - this.dateOfHighestHigh) > TimeSpan.FromSeconds((HHLL_Threshold * 60 * mql4.Period())))
                     {
                         validHighestHigh = true;
                     }
@@ -174,7 +171,7 @@ namespace biiuse
                 if (price < this.lowestLow)
                 {
                     bool validLowestLow = false;
-                    if ((mql4.TimeCurrent() - this.dateOfLowestLow) > TimeSpan.FromSeconds(HHLL_Threshold * 60))
+                    if ((mql4.TimeCurrent() - this.dateOfLowestLow) > TimeSpan.FromSeconds(HHLL_Threshold * 60 * mql4.Period()))
                     {
                         validLowestLow = true;
                     }
@@ -184,9 +181,6 @@ namespace biiuse
                 }
             }
             return 0;
-
-
-
         }
 
         public void writeToCSV(string filename)

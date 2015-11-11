@@ -127,7 +127,7 @@ namespace biiuse
                         context.setOrderType("BUY_LIMIT");
                         int riskPips = (int)(mql4.MathAbs(stopLoss - entryPrice) * factor);
                         //TODO Parametrize Risk
-                        double riskCapital = mql4.AccountBalance() * 0.0075; ///Parametrize
+                        double riskCapital = mql4.AccountBalance() * context.getMaxBalanceRisk(); ///Parametrize
                         positionSize = Math.Round(OrderManager.getLotSize(riskCapital, riskPips, mql4), context.getLotDigits(), MidpointRounding.AwayFromZero);
                         context.setState(new WaitForBreakToPlaceLimitOrder(context, orderType, rangeLow, rangeHigh, entryPrice, cancelPrice, positionSize, mql4));
                         return;
@@ -138,7 +138,7 @@ namespace biiuse
                     {
                         int riskPips = (int)(mql4.MathAbs(stopLoss - entryPrice) * factor);
                         //TODO Parametrize Risk
-                        double riskCapital = mql4.AccountBalance() * 0.0075;
+                        double riskCapital = mql4.AccountBalance() * context.getMaxBalanceRisk();
                         positionSize = Math.Round(OrderManager.getLotSize(riskCapital, riskPips, mql4), context.getLotDigits(), MidpointRounding.AwayFromZero);
 
                         context.addLogEntry("AccountBalance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2) + "; Risk Capital: $" + mql4.DoubleToString(riskCapital, 2) + "; Risk pips: " + mql4.DoubleToString(riskPips, 2) + " micro pips; Position Size: " + mql4.DoubleToString(positionSize, 2) + " lots; Pip value: " + mql4.DoubleToString(OrderManager.getPipValue(mql4), mql4.Digits), true);

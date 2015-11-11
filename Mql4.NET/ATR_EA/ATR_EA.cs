@@ -7,7 +7,7 @@ namespace biiuse
     class ATR_EA : NQuotes.MqlApi
     {
         [ExternVariable]
-        public double maxBalanceRisk = 0.75; //Max risk per trader relative to account balance (in %)
+        public double maxBalanceRisk = 0.0075; //Max risk per trader relative to account balance (in %)
         [ExternVariable]
         public int sundayLengthInHours = 7; //Length of Sunday session in hours
         [ExternVariable]
@@ -117,36 +117,47 @@ namespace biiuse
                 double curDailyRange = iHigh(null, MqlApi.PERIOD_D1, 0) - iLow(null, MqlApi.PERIOD_D1, 0);
                 double DR_ATR = curDailyRange / atr;
 
-
-
                 //if ((((ATR_OR < maxATROR) && (ATR_OR > minATROR)) || cutLossesBeforeATRFilter))
-                if ((ATR_OR < maxATROR) && (ATR_OR > minATROR) && (DR_ATR < maxDRATR) && (DR_ATR > minDRATR))
+
+
+
+                if (updateResult == 1)
                 {
+                    Print("Tradeable Highest High found: ", currSession.getHighestHigh(), " Time: ", currSession.getHighestHighTime());
+                    Print("DR / ATR is: ", DR_ATR);
+                    Print("ATR / OR is: ", ATR_OR);
 
-
-                    if (updateResult == 1)
+                    if ((ATR_OR < maxATROR) && (ATR_OR > minATROR) && (DR_ATR < maxDRATR) && (DR_ATR > minDRATR))
                     {
-                        Print("Tradeable Highest High found: ", currSession.getHighestHigh(), " Time: ", currSession.getHighestHighTime());
-                        Print("DR / ATR is: ", DR_ATR);
-                        Print("ATR / OR is: ", ATR_OR);
-                        ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getHighestHigh(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, this);
+                        ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getHighestHigh(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, this);
                         trade.setState(new HighestHighReceivedEstablishingEligibilityRange(trade, this));
                         trades.Add(trade);
                     }
-
-
+                    else
+                    {
+                        Print("DR / ATR or ATR / OR too high. No trade taken");
+                    }
+                }
+                    
                     if (updateResult == -1)
                     {
                         Print("Tradeable Lowest Low found: ", currSession.getLowestLow(), " Time: ", currSession.getLowestLowTime());
                         Print("DR / ATR is: ", DR_ATR);
                         Print("ATR / OR is: ", ATR_OR);
-                        ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getLowestLow(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, this);
-                        trade.setState(new LowestLowReceivedEstablishingEligibilityRange(trade, this));
-                        trades.Add(trade);
+
+                        if ((ATR_OR < maxATROR) && (ATR_OR > minATROR) && (DR_ATR < maxDRATR) && (DR_ATR > minDRATR))
+                        {
+
+                            ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getLowestLow(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, this);
+                            trade.setState(new LowestLowReceivedEstablishingEligibilityRange(trade, this));
+                            trades.Add(trade);
+                        } else
+                        {
+                            Print("DR / ATR or ATR / OR too high. No trade taken");
+                        }
                     }
                 }
                 
-            }
             return base.start();
         }
 
