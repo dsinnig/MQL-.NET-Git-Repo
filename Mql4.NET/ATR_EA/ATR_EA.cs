@@ -41,6 +41,10 @@ namespace biiuse
         [ExternVariable]
         public double minDRATR = 0; //min percent value for ATR / OR
         [ExternVariable]
+        public int minATR = 0; //min ATR in MicroPips to take a trade
+        [ExternVariable]
+        public int maxATR = 10000; //max ATR in MicroPips to take a trade
+        [ExternVariable]
         public bool cutLossesBeforeATRFilter = true; //min percent value for ATR / OR
         [ExternVariable]
         public string logFileName = "tradeLog.csv"; //path and filename for CSV trade log
@@ -95,6 +99,10 @@ namespace biiuse
 
                         Print("Reference date: ", currSession.getHHLL_ReferenceDateTime().ToString());
 
+                        if ((currSession.getATR() * 100000 < minATR) || (currSession.getATR() * 100000 > maxATR))
+                        {
+                            Print("ATR is not in range of: ", minATR, " - ", maxATR, ". No trades will be taken in this Session)");
+                        }
                     }
                 }
             }
@@ -121,7 +129,7 @@ namespace biiuse
 
 
 
-                if (updateResult == 1)
+                if ((updateResult == 1) && (minATR < currSession.getATR() * 100000) && (maxATR > currSession.getATR() * 100000))
                 {
                     Print("Tradeable Highest High found: ", currSession.getHighestHigh(), " Time: ", currSession.getHighestHighTime());
                     Print("DR / ATR is: ", DR_ATR);
@@ -139,7 +147,7 @@ namespace biiuse
                     }
                 }
                     
-                    if (updateResult == -1)
+                    if ((updateResult == -1) && (minATR < currSession.getATR() * 100000) && (maxATR > currSession.getATR() * 100000))
                     {
                         Print("Tradeable Lowest Low found: ", currSession.getLowestLow(), " Time: ", currSession.getLowestLowTime());
                         Print("DR / ATR is: ", DR_ATR);

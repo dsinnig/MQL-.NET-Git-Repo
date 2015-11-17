@@ -2,6 +2,8 @@
 #property copyright "Daniel Sinnig, BIIUSE Consulting and Investments"
 #property link "http://www.biiuse.com"
 
+
+
 #import "nquotes/nquoteslib.ex4"
 	int nquotes_setup(string className, string assemblyName);
 	int nquotes_init();
@@ -26,12 +28,22 @@
 	int nquotes_get_property_adouble(string name, double& value[]);
 #import
 
+
+enum ATR 
+ {
+   DAY_TRADE_ORIG=0,  
+   DAY_TRADE_2_DAYS=1,  
+   SWING_TRADE_5_DAYS=2, 
+ };
+
+
 input double maxBalanceRisk = 0.0075; //Max risk per trader relative to account balance (in %)
 input int sundayLengthInHours=7; //Length of Sunday session in hours
 input int HHLL_Threshold=60; //Time in minutes after last HH / LL before a tradeable HH/LL can occur
 input int lengthOfGracePeriod=10; //Length in bars of Grace Period after a tradeable HH/LL occured
 input double rangeRestriction=80; //Min range of Grace Period
 input int lookBackSessions = 1; //Number of sessions to look back for establishing a new HH/LL
+input ATR atrType = DAY_TRADE_2_DAYS; //ATR to be used
 input double maxRisk=10; //Max risk (in percent of ATR)
 input double maxVolatility=20; //Max volatility (in percent of ATR)
 input double minProfitTarget=4; //Min Profit Target (in factors of the risk e.g., 3 = 3* Risk)
@@ -42,6 +54,9 @@ input double maxATROR = 0.5; //max percent value for ATR / OR
 input double minATROR = 0; //min percent value for ATR / OR
 input double maxDRATR = 0.35; //max percent value for ATR / OR
 input double minDRATR = 0; //min percent value for ATR / OR
+input int minATR = 0; //min ATR in micropips
+input int maxATR = 999999; //max ATR in micropips
+
 input bool cutLossesBeforeATRFilter=true; //Flag whether the losing streak filter should take into account trades with invalid ATR OT 
 input string logFileName="tradeLog.csv"; //path and filename for CSV trade log
    
@@ -56,6 +71,7 @@ int init()
    nquotes_set_property_int("lengthOfGracePeriod",lengthOfGracePeriod); 
    nquotes_set_property_double("rangeRestriction",rangeRestriction); 
    nquotes_set_property_int("lookBackSessions",lookBackSessions); 
+   nquotes_set_property_int("atrTypeInInt",atrType); 
    nquotes_set_property_double("maxRisk",maxRisk); 
    nquotes_set_property_double("maxVolatility",maxVolatility); 
    nquotes_set_property_double("minProfitTarget",minProfitTarget); 
@@ -66,15 +82,11 @@ int init()
    nquotes_set_property_double("minATROR",minATROR);  
    nquotes_set_property_double("maxDRATR",maxDRATR); 
    nquotes_set_property_double("minDRATR",minDRATR);  
+   nquotes_set_property_int("minATR",minATR); 
+   nquotes_set_property_int("maxATR",maxATR); 
    nquotes_set_property_bool("cutLossesBeforeATRFilter", cutLossesBeforeATRFilter);
    nquotes_set_property_string("logFileName",logFileName); 
-   
-   
-   
-   
-   
-   
-
+ 
 	return (nquotes_init());
 }
 
