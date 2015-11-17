@@ -23,8 +23,6 @@ namespace biiuse
                 context.addLogEntry("P/L of: $" + mql4.DoubleToString(mql4.OrderProfit(), 2) + "; Commission: $" + mql4.DoubleToString(mql4.OrderCommission(), 2) + "; Swap: $" + mql4.DoubleToString(mql4.OrderSwap(), 2) + "; New Account balance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2), true);
 
                 context.setRealizedPL(context.Order.getOrderProfit());
-                context.setCommission(context.Order.getOrderCommission());
-                context.setSwap(context.Order.getOrderSwap());
                 context.setActualClose(context.Order.getOrderClosePrice());
 
                 context.setState(new TradeClosed(context, mql4));

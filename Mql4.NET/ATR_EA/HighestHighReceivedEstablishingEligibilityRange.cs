@@ -103,6 +103,7 @@ namespace biiuse
                     int orderType = -1;
                     TradeState nextState = null;
                     double positionSize = 0;
+                    double oneMicroPip = 1 / OrderManager.getPipConversionFactor(mql4);
 
                     //Range is less than max risk
                     if ((rangeHigh - rangeLow) < ((context.getPercentageOfATRForMaxRisk() / 100.00) * context.getATR()))
@@ -113,7 +114,7 @@ namespace biiuse
 
                         entryPrice = rangeLow;
                         stopLoss = rangeHigh;
-                        cancelPrice = rangeHigh;
+                        cancelPrice = rangeHigh - buffer + oneMicroPip;
                         orderType = MqlApi.OP_SELLSTOP;
                         context.setOrderType("SELL_STOP");
                         nextState = new StopSellOrderOpened(context, mql4);
@@ -137,7 +138,9 @@ namespace biiuse
                         mql4.Print("cal. diff is: ", context.getATR() * (context.getPercentageOfATRForMaxRisk() / 100.00));
                         mql4.Print("EntryPrice is!!!! ", entryPrice);
                         stopLoss = rangeHigh;
-                        cancelPrice = rangeHigh - context.getATR() * (context.getPercentageOfATRForMaxVolatility() / 100.00); //cancel if above 20% of ATR
+
+                        
+                        cancelPrice = rangeHigh - buffer + oneMicroPip - context.getATR() * (context.getPercentageOfATRForMaxVolatility() / 100.00); //cancel if above 20% of ATR
                         orderType = MqlApi.OP_SELLLIMIT;
                         context.setOrderType("SELL_LIMIT");
                         int riskPips = (int)(mql4.MathAbs(stopLoss - entryPrice) * factor);
@@ -181,7 +184,7 @@ namespace biiuse
                             context.addLogEntry("Order successfully placed. Initial Profit target is: " + mql4.DoubleToString(context.getInitialProfitTarget(), mql4.Digits) + " (" + mql4.IntegerToString((int)(mql4.MathAbs(context.getInitialProfitTarget() - context.getPlannedEntry()) * factor)) + " micro pips)" + " Risk is: " + mql4.IntegerToString((int)riskPips) + " micro pips", true);
                             return;
                         }
-                        if ((result == ErrorType.RETRIABLE_ERROR) && (context.getOrderTicket() == -1))
+                        if ((result == ErrorType.RETRIABLE_ERROR) && (context.Order.OrderTicket == -1))
                         {
                             context.addLogEntry("Order entry failed. Error code: " + mql4.IntegerToString(mql4.GetLastError()) + ". Will re-try at next tick", true);
 
@@ -189,7 +192,7 @@ namespace biiuse
                         }
 
                         //this should never happen...
-                        if ((context.getOrderTicket() != -1) && ((result == ErrorType.RETRIABLE_ERROR) || (result == ErrorType.NON_RETRIABLE_ERROR)))
+                        if ((context.Order.OrderTicket != -1) && ((result == ErrorType.RETRIABLE_ERROR) || (result == ErrorType.NON_RETRIABLE_ERROR)))
                         {
                             context.addLogEntry("Error ocured but order is still open. Error code: " + mql4.IntegerToString(mql4.GetLastError()) + ". Continue with trade. Initial Profit target is: " + mql4.DoubleToString(context.getInitialProfitTarget(), mql4.Digits) + " (" + mql4.IntegerToString((int)(mql4.MathAbs(context.getInitialProfitTarget() - context.getPlannedEntry()) * factor)) + " micro pips)" + " Risk is: " + mql4.IntegerToString((int)riskPips) + " micro pips", true);
                             context.setInitialProfitTarget(Math.Round(context.getPlannedEntry() + ((context.getPlannedEntry() - context.getStopLoss()) * (context.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
@@ -197,7 +200,7 @@ namespace biiuse
                             return;
                         }
 
-                        if ((result == ErrorType.NON_RETRIABLE_ERROR) && (context.getOrderTicket() == -1))
+                        if ((result == ErrorType.NON_RETRIABLE_ERROR) && (context.Order.OrderTicket == -1))
                         {
                             context.addLogEntry("Non-recoverable error occurred. Errorcode: " + mql4.IntegerToString(mql4.GetLastError()) + ". Trade will be canceled", true);
                             context.setState(new TradeClosed(context, mql4));

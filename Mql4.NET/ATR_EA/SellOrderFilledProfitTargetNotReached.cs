@@ -24,8 +24,6 @@ namespace biiuse
 
 
             context.setRealizedPL(context.Order.getOrderProfit());
-            context.setCommission(context.Order.getOrderCommission());
-            context.setSwap(context.Order.getOrderSwap());
             context.setActualClose(context.Order.getOrderClosePrice());
             context.setState(new TradeClosed(context, mql4));
             return;

@@ -99,14 +99,14 @@ namespace biiuse
                     trade.addLogEntry("Limit order successfully placed. Initial Profit target is: " + mql4.DoubleToString(trade.getInitialProfitTarget(), mql4.Digits) + " (" + mql4.IntegerToString((int)(mql4.MathAbs(trade.getInitialProfitTarget() - trade.getPlannedEntry()) * OrderManager.getPipConversionFactor(mql4))), true);
                     return;
                 }
-                if ((orderResult == ErrorType.RETRIABLE_ERROR) && (trade.getOrderTicket() == -1))
+                if ((orderResult == ErrorType.RETRIABLE_ERROR) && (trade.Order.OrderTicket == -1))
                 {
                     trade.addLogEntry("Order entry failed. Error code: " + mql4.IntegerToString(mql4.GetLastError()) + ". Will re-try at next tick", true);
                     return;
                 }
 
                 //this should never happen...
-                if ((trade.getOrderTicket() != -1) && ((orderResult == ErrorType.RETRIABLE_ERROR) || (orderResult == ErrorType.NON_RETRIABLE_ERROR)))
+                if ((trade.Order.OrderTicket != -1) && ((orderResult == ErrorType.RETRIABLE_ERROR) || (orderResult == ErrorType.NON_RETRIABLE_ERROR)))
                 {
                     trade.addLogEntry("Error ocured but order is still open. Error code: " + mql4.IntegerToString(mql4.GetLastError()) + ". Continue with trade. Initial Profit target is: " + mql4.DoubleToString(trade.getInitialProfitTarget(), mql4.Digits) + " (" + mql4.IntegerToString((int)(mql4.MathAbs(trade.getInitialProfitTarget() - trade.getPlannedEntry()) * OrderManager.getPipConversionFactor(mql4))) + " micro pips)", true);
                     trade.setInitialProfitTarget(Math.Round(trade.getPlannedEntry() + ((trade.getPlannedEntry() - trade.getStopLoss()) * (trade.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
@@ -114,7 +114,7 @@ namespace biiuse
                     return;
                 }
 
-                if ((orderResult == ErrorType.NON_RETRIABLE_ERROR) && (trade.getOrderTicket() == -1))
+                if ((orderResult == ErrorType.NON_RETRIABLE_ERROR) && (trade.Order.OrderTicket == -1))
                 {
                     trade.addLogEntry("Non-recoverable error occurred. Errorcode: " + mql4.IntegerToString(mql4.GetLastError()) + ". Trade will be canceled", true);
                     trade.setState(new TradeClosed(trade, mql4));

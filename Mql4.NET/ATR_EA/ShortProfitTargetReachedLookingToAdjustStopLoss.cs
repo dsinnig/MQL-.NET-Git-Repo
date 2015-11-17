@@ -37,8 +37,6 @@ namespace biiuse
 
 
                 context.setRealizedPL(context.Order.getOrderProfit());
-                context.setCommission(context.Order.getOrderCommission());
-                context.setSwap(context.Order.getOrderSwap());
                 context.setActualClose(context.Order.getOrderClosePrice());
                 context.setState(new TradeClosed(context, mql4));
                 return;
@@ -116,13 +114,13 @@ namespace biiuse
                                 context.addLogEntry("Stop loss succssfully adjusted", true);
                             }
 
-                            if ((result == ErrorType.RETRIABLE_ERROR) && (context.getOrderTicket() == -1))
+                            if ((result == ErrorType.RETRIABLE_ERROR) && (context.Order.OrderTicket == -1))
                             {
                                 context.addLogEntry("Order modification failed. Error code: " + mql4.IntegerToString(mql4.GetLastError()) + ". Will re-try at next tick", true);
                                 return;
                             }
 
-                            if ((result == ErrorType.NON_RETRIABLE_ERROR) && (context.getOrderTicket() == -1))
+                            if ((result == ErrorType.NON_RETRIABLE_ERROR) && (context.Order.OrderTicket == -1))
                             {
                                 context.addLogEntry("Non-recoverable error occurred. Errorcode: " + mql4.IntegerToString(mql4.GetLastError()) + ". Trade will be canceled", true);
                                 context.setState(new TradeClosed(context, mql4));

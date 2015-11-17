@@ -12,7 +12,6 @@ namespace biiuse
 
     public class Trade : MQL4Wrapper
     {
-        protected int orderTicket;
         protected string id;
         protected double startingBalance;
         protected double endingBalance;
@@ -27,8 +26,8 @@ namespace biiuse
         protected double positionSize;
         protected int lotDigits;
         protected double realizedPL;
-        protected double commission;
-        protected double swap;
+        //protected double commission;
+        //protected double swap;
         protected int spreadOrderOpen;
         protected int spreadOrderClose;
         protected TradeType tradeType;
@@ -68,7 +67,6 @@ namespace biiuse
             this.endingBalance = 0;
             this.lotDigits = _lotDigits;
             this.state = null;
-            this.orderTicket = -1;
             this.actualEntry = -1;
             this.actualClose = -1;
             this.takeProfit = 0;
@@ -80,8 +78,8 @@ namespace biiuse
             this.positionSize = 0;
             this.logSize = 0;
             this.realizedPL = 0.0;
-            this.commission = 0.0;
-            this.swap = 0.0;
+            //this.commission = 0.0;
+            //this.swap = 0.0;
             this.spreadOrderOpen = -1;
             this.spreadOrderClose = -1;
 
@@ -289,7 +287,7 @@ namespace biiuse
                 output = "TRADE_ID, ORDER_TICKET, TRADE_TYPE, SYMBOL, TRADE_OPENED_DATE, ORDER_PLACED_DATE, STARTING_BALANCE, PLANNED_ENTRY, ORDER_FILLED_DATE, ACTUAL_ENTRY, SPREAD_ORDER_OPEN, INITIAL_STOP_LOSS, REVISED_STOP_LOSS, INITIAL_TAKE_PROFIT, REVISED TAKE_PROFIT, CANCEL_PRICE, ACTUAL_CLOSE, SPREAD_ORDER_CLOSE, POSITION_SIZE, REALIZED PL, COMMISSION, SWAP, ENDING_BALANCE, TRADE_CLOSED_DATE";
                 mql4.FileWriteString(filehandle, output, output.Length);
             }
-            output = this.id + ", " + this.orderTicket + ", " + this.tradeType + ", " + mql4.Symbol() + ", " + ExcelUtil.datetimeToExcelDate(this.tradeOpenedDate) + ", " + ExcelUtil.datetimeToExcelDate(this.orderPlacedDate) + ", " + this.startingBalance + ", " + this.plannedEntry + ", " + ExcelUtil.datetimeToExcelDate(this.orderFilledDate) + ", " + this.actualEntry + ", " + this.spreadOrderOpen + ", " + this.originalStopLoss + ", " + this.stopLoss + ", " + this.initialProfitTarget + ", " + this.takeProfit + ", " + this.cancelPrice + ", " + this.actualClose + ", " + this.spreadOrderClose + ", " + this.positionSize + ", " + this.realizedPL + ", " + this.commission + ", " + this.swap + ", " + this.endingBalance + ", " + ExcelUtil.datetimeToExcelDate(this.tradeClosedDate);
+            output = this.id + ", " + this.Order.OrderTicket + ", " + this.tradeType + ", " + mql4.Symbol() + ", " + ExcelUtil.datetimeToExcelDate(this.tradeOpenedDate) + ", " + ExcelUtil.datetimeToExcelDate(this.orderPlacedDate) + ", " + this.startingBalance + ", " + this.plannedEntry + ", " + ExcelUtil.datetimeToExcelDate(this.orderFilledDate) + ", " + this.actualEntry + ", " + this.spreadOrderOpen + ", " + this.originalStopLoss + ", " + this.stopLoss + ", " + this.initialProfitTarget + ", " + this.takeProfit + ", " + this.cancelPrice + ", " + this.actualClose + ", " + this.spreadOrderClose + ", " + this.positionSize + ", " + this.realizedPL + ", " + this.Order.getOrderCommission() + ", " + this.Order.getOrderSwap() + ", " + this.endingBalance + ", " + ExcelUtil.datetimeToExcelDate(this.tradeClosedDate);
             mql4.FileWriteString(filehandle, "\n", 1);
             mql4.FileWriteString(filehandle, output, output.Length);
             mql4.FileClose(filehandle);
@@ -299,16 +297,6 @@ namespace biiuse
         public void setState(TradeState aState)
         {
             this.state = aState;
-        }
-
-        public void setOrderTicket(int aTicket)
-        {
-            this.orderTicket = aTicket;
-        }
-
-        public int getOrderTicket()
-        {
-            return this.orderTicket;
         }
 
         public string getId()
@@ -423,24 +411,6 @@ namespace biiuse
         public double getRealizedPL()
         {
             return this.realizedPL;
-        }
-
-        public void setCommission(double _commission)
-        {
-            this.commission = _commission;
-        }
-        public double getCommission()
-        {
-            return this.commission;
-        }
-
-        public void setSwap(double _swap)
-        {
-            this.swap = _swap;
-        }
-        public double getSwap()
-        {
-            return this.swap;
         }
 
         public void setStartingBalance(double _balance)

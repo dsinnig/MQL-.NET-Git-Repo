@@ -134,7 +134,7 @@ namespace biiuse
                 trade.setTakeProfit(takeProfit);
                 trade.setCancelPrice(cancelPrice);
                 trade.setPositionSize(positionSize);
-                trade.setOrderTicket(ticket);
+                trade.Order.OrderTicket = ticket;
             }
             return result;
         }
