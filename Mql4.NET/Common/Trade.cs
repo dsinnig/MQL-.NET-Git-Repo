@@ -115,69 +115,6 @@ namespace biiuse
             }
         }
 
-
-        /*
-
-        public virtual ErrorType submitNewOrder(int orderType, double _entryPrice, double _stopLoss, double _takeProfit, double _cancelPrice, double _positionSize)
-        {
-            return OrderManager.submitNewOrder(orderType, _entryPrice, _stopLoss, _takeProfit, _cancelPrice, _positionSize, this, mql4);
-        }
-
-        public virtual ErrorType modifyOrder(double newOpenPrice, double newStopLoss, double newTakeProfit)
-        {
-            return OrderManager.modifyOrder(this.orderTicket, newOpenPrice, newStopLoss, newTakeProfit, this, mql4);
-        }
-
-        public virtual ErrorType deleteOrder()
-        {
-            return OrderManager.deleteOrder(this.orderTicket, this, mql4);
-        }
-
-        public virtual int getOrderStatus()  
-        {
-            if (mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET)) return mql4.OrderType();
-            else return -1;
-        }
-
-        public virtual DateTime getOrderCloseTime()
-        {
-            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
-            return mql4.OrderCloseTime();
-        }
-
-        public virtual double getOrderProfit()
-        {
-            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
-            return mql4.OrderProfit();
-        }
-
-        public virtual double getOrderCommission()
-        {
-            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
-            return mql4.OrderCommission();
-        }
-
-        public virtual double getOrderSwap()
-        {
-            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
-            return mql4.OrderSwap();
-        }
-
-
-        public virtual double getOrderOpenPrice()
-        {
-            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
-            return mql4.OrderOpenPrice();
-        }
-
-        public virtual double getOrderClosePrice()
-        {
-            mql4.OrderSelect(this.orderTicket, MqlApi.SELECT_BY_TICKET);
-            return mql4.OrderClosePrice();
-        }
-
-    */
-
         public virtual void update()
         {
             if ((order.OrderType != OrderType.INIT) && (order.OrderType != OrderType.FINAL)) order.update();
@@ -287,7 +224,7 @@ namespace biiuse
                 output = "TRADE_ID, ORDER_TICKET, TRADE_TYPE, SYMBOL, TRADE_OPENED_DATE, ORDER_PLACED_DATE, STARTING_BALANCE, PLANNED_ENTRY, ORDER_FILLED_DATE, ACTUAL_ENTRY, SPREAD_ORDER_OPEN, INITIAL_STOP_LOSS, REVISED_STOP_LOSS, INITIAL_TAKE_PROFIT, REVISED TAKE_PROFIT, CANCEL_PRICE, ACTUAL_CLOSE, SPREAD_ORDER_CLOSE, POSITION_SIZE, REALIZED PL, COMMISSION, SWAP, ENDING_BALANCE, TRADE_CLOSED_DATE";
                 mql4.FileWriteString(filehandle, output, output.Length);
             }
-            output = this.id + ", " + this.Order.OrderTicket + ", " + this.tradeType + ", " + mql4.Symbol() + ", " + ExcelUtil.datetimeToExcelDate(this.tradeOpenedDate) + ", " + ExcelUtil.datetimeToExcelDate(this.orderPlacedDate) + ", " + this.startingBalance + ", " + this.plannedEntry + ", " + ExcelUtil.datetimeToExcelDate(this.orderFilledDate) + ", " + this.actualEntry + ", " + this.spreadOrderOpen + ", " + this.originalStopLoss + ", " + this.stopLoss + ", " + this.initialProfitTarget + ", " + this.takeProfit + ", " + this.cancelPrice + ", " + this.actualClose + ", " + this.spreadOrderClose + ", " + this.positionSize + ", " + this.realizedPL + ", " + this.Order.getOrderCommission() + ", " + this.Order.getOrderSwap() + ", " + this.endingBalance + ", " + ExcelUtil.datetimeToExcelDate(this.tradeClosedDate);
+            output = this.id + ", " + this.Order.OrderTicket + ", " + this.tradeType + "," + mql4.Symbol() + ", " + ExcelUtil.datetimeToExcelDate(this.tradeOpenedDate) + ", " + ExcelUtil.datetimeToExcelDate(this.orderPlacedDate) + ", " + this.startingBalance + ", " + this.plannedEntry + ", " + ExcelUtil.datetimeToExcelDate(this.orderFilledDate) + ", " + this.actualEntry + ", " + this.spreadOrderOpen + ", " + this.originalStopLoss + ", " + this.stopLoss + ", " + this.initialProfitTarget + ", " + this.takeProfit + ", " + this.cancelPrice + ", " + this.actualClose + ", " + this.spreadOrderClose + ", " + this.positionSize + ", " + this.realizedPL + ", " + this.Order.getOrderCommission() + ", " + this.Order.getOrderSwap() + ", " + this.endingBalance + ", " + ExcelUtil.datetimeToExcelDate(this.tradeClosedDate);
             mql4.FileWriteString(filehandle, "\n", 1);
             mql4.FileWriteString(filehandle, output, output.Length);
             mql4.FileClose(filehandle);
