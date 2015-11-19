@@ -67,7 +67,7 @@ namespace biiuse
 
         public override int start()
         {
-            
+
             //new bar?
 
             if (!bartime.Equals(Time[0]))
@@ -81,10 +81,10 @@ namespace biiuse
                     currSession = newSession;
 
                     currSession.writeToCSV("session_atr.csv");
-                    Print("Session start time: ", currSession.getSessionStartTime().ToLongTimeString());
+                    currSession.addLogEntry(true, "Session start time: ", currSession.getSessionStartTime().ToString());
                     if (!currSession.tradingAllowed())
                     {
-                        Print(TimeCurrent(), " Start session: ", currSession.getName(), " NO NEW TRADES ALLOWED.");
+                        currSession.addLogEntry(true, "ATTENTION: Session could not be established", "\n", "Trading is disabled. Check log for details");
                     }
                     else
                     {
@@ -94,15 +94,38 @@ namespace biiuse
                                " LL: ", currSession.getLowestLow(), "@ ", currSession.getLowestLowTime());
 
                         */
+                        double atr = currSession.getATR();
+                        double tenDayHigh = currSession.getTenDayHigh();
+                        double tenDayLow = currSession.getTenDayLow();
+                        double ATR_OR = atr / (tenDayHigh - tenDayLow);
+                        string sessionStatus = "";
 
-                        Print(TimeCurrent().ToString(), " Start session: ", currSession.getName(), " ATR: ", NormalizeDouble(currSession.getATR(), Digits), " (", (int)(currSession.getATR() * 100000), " micro pips)", ", HH: ", currSession.getHighestHigh(), ", LL: ", currSession.getLowestLow());
-
-                        Print("Reference date: ", currSession.getHHLL_ReferenceDateTime().ToString());
-
-                        if ((currSession.getATR() * 100000 < minATR) || (currSession.getATR() * 100000 > maxATR))
+                        if ((currSession.getATR() * OrderManager.getPipConversionFactor(this) < minATR) || (currSession.getATR() * OrderManager.getPipConversionFactor(this) > maxATR))
                         {
-                            Print("ATR is not in range of: ", minATR, " - ", maxATR, ". No trades will be taken in this Session)");
+                            sessionStatus = ("ATR is not in range of: " + minATR + " - " + maxATR + ". No trades will be taken in this Session)");
+                            currSession.tradingAllowed(false);
                         }
+                        else if ((ATR_OR > maxATROR) && (ATR_OR < minATROR))
+                        {
+                            sessionStatus = ("ATR/OR is not in range of: " + (int)minATROR * 100 + " - " + (int)maxATROR * 100 + ". No trades will be taken in this Session)");
+                            currSession.tradingAllowed(false);
+                        }
+                        else
+                        {
+                            sessionStatus = "ATR and ATR/OR are within range. Trades may be triggered in this sessions";
+                        }
+
+                        currSession.addLogEntry(true, "New Trading Session Established",
+                                                      "Session name: ", currSession.getName(), "\n",
+                                                      "Reference date: ", currSession.getHHLL_ReferenceDateTime().ToString(), "\n",
+                                                      "ATR: ", NormalizeDouble(atr, Digits), " (", (int)(currSession.getATR() * OrderManager.getPipConversionFactor(this)), " micro pips)", "\n",
+                                                      "HH: ", currSession.getHighestHigh().ToString("F5"), ", LL: ", currSession.getLowestLow().ToString("F5"), "\n",
+                                                      "10 Day High is: ", tenDayHigh.ToString("F5"), " 10 Day Low is: ", tenDayLow.ToString("F5"), "\n",
+                                                      "ATR / OR is: ", ATR_OR.ToString("F5"), "\n",
+                                                      sessionStatus
+                              );
+
+
                     }
                 }
             }
@@ -113,59 +136,84 @@ namespace biiuse
             }
 
 
-            int updateResult = currSession.update((Bid + Ask)/2);
 
             if (currSession.tradingAllowed())
             {
-
+                int updateResult = currSession.update((Bid + Ask) / 2);
                 double atr = currSession.getATR();
-                double tenDayHigh = currSession.getTenDayHigh();
-                double tenDayLow = currSession.getTenDayLow();
-                double ATR_OR = atr / (tenDayHigh - tenDayLow);
                 double curDailyRange = iHigh(null, MqlApi.PERIOD_D1, 0) - iLow(null, MqlApi.PERIOD_D1, 0);
                 double DR_ATR = curDailyRange / atr;
 
                 //if ((((ATR_OR < maxATROR) && (ATR_OR > minATROR)) || cutLossesBeforeATRFilter))
 
 
-
-                if ((updateResult == 1) && (minATR < currSession.getATR() * 100000) && (maxATR > currSession.getATR() * 100000))
+                if ((updateResult == 1) && (minATR < currSession.getATR() * OrderManager.getPipConversionFactor(this)) && (maxATR > currSession.getATR() * OrderManager.getPipConversionFactor(this)))
                 {
-                    Print("Tradeable Highest High found: ", currSession.getHighestHigh(), " Time: ", currSession.getHighestHighTime());
-                    Print("DR / ATR is: ", DR_ATR);
-                    Print("ATR / OR is: ", ATR_OR);
 
-                    if ((ATR_OR < maxATROR) && (ATR_OR > minATROR) && (DR_ATR < maxDRATR) && (DR_ATR > minDRATR))
+                    string status = "";
+
+                    bool go = false;
+                    if ((DR_ATR < maxDRATR) && (DR_ATR > minDRATR))
+                    {
+                        go = true;
+                        status = "DR/ATR is within range. Starting 10min clock";
+                    }
+                    else
+                    {
+                        go = false;
+                        status = "DR/ATR is too big. Trade is rejected";
+                    }
+
+                    currSession.addLogEntry(true, "Tradeable Highest High found",
+                                                  "Highest high is: ", currSession.getHighestHigh().ToString("F5"), "\n",
+                                                  "Time of highest high: ", currSession.getHighestHighTime().ToString(), "\n",
+                                                  "Session high: ", iHigh(null, MqlApi.PERIOD_D1, 0).ToString("F5"), " Session low: ", iLow(null, MqlApi.PERIOD_D1, 0).ToString("F5"), "\n",
+                                                  "DR / ATR is: ", DR_ATR.ToString("F5"), "\n",
+                                                  status
+                                                  );
+                    if (go)
                     {
                         ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getHighestHigh(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, this);
                         trade.setState(new HighestHighReceivedEstablishingEligibilityRange(trade, this));
                         trades.Add(trade);
                     }
+
+                }
+
+                if ((updateResult == -1) && (minATR < currSession.getATR() * OrderManager.getPipConversionFactor(this)) && (maxATR > currSession.getATR() * OrderManager.getPipConversionFactor(this)))
+                {
+
+                    string status = "";
+
+                    bool go = false;
+                    if ((DR_ATR < maxDRATR) && (DR_ATR > minDRATR))
+                    {
+                        go = true;
+                        status = "DR/ATR is within range. Starting 10min clock";
+                    }
                     else
                     {
-                        Print("DR / ATR or ATR / OR too high. No trade taken");
+                        go = false;
+                        status = "DR/ATR is too big. Trade is rejected";
                     }
-                }
-                    
-                    if ((updateResult == -1) && (minATR < currSession.getATR() * 100000) && (maxATR > currSession.getATR() * 100000))
+
+                    currSession.addLogEntry(true, "Tradeable Lowest Low found",
+                                                  "Lowest low is: ", currSession.getLowestLow().ToString("F5"), "\n",
+                                                  "Time of highest high: ", currSession.getLowestLowTime().ToString(), "\n",
+                                                  "Session high: ", iHigh(null, MqlApi.PERIOD_D1, 0).ToString("F5"), " Session low: ", iLow(null, MqlApi.PERIOD_D1, 0).ToString("F5"), "\n",
+                                                  "DR / ATR is: ", DR_ATR.ToString("F5"), "\n",
+                                                  status
+                                                  );
+
+                    if (go)
                     {
-                        Print("Tradeable Lowest Low found: ", currSession.getLowestLow(), " Time: ", currSession.getLowestLowTime());
-                        Print("DR / ATR is: ", DR_ATR);
-                        Print("ATR / OR is: ", ATR_OR);
-
-                        if ((ATR_OR < maxATROR) && (ATR_OR > minATROR) && (DR_ATR < maxDRATR) && (DR_ATR > minDRATR))
-                        {
-
-                            ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getLowestLow(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, this);
-                            trade.setState(new LowestLowReceivedEstablishingEligibilityRange(trade, this));
-                            trades.Add(trade);
-                        } else
-                        {
-                            Print("DR / ATR or ATR / OR too high. No trade taken");
-                        }
+                        ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getLowestLow(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, this);
+                        trade.setState(new LowestLowReceivedEstablishingEligibilityRange(trade, this));
+                        trades.Add(trade);
                     }
                 }
-                
+            }
+
             return base.start();
         }
 
@@ -195,17 +243,17 @@ namespace biiuse
                 index--;
             }
             return true;
-         }
+        }
 
 
-        private bool wasConcurrentlyOpen(int index, List<Trade> clean_trades)  
+        private bool wasConcurrentlyOpen(int index, List<Trade> clean_trades)
         {
             bool prevTradeWasConcurOpen = false;
-            if (clean_trades.Count-1 >= index)
+            if (clean_trades.Count - 1 >= index)
             {
                 Trade prevTrade = clean_trades[index];
                 //find if it was concurrently open
-                int i = index-1;
+                int i = index - 1;
                 while (i >= 0)
                 {
                     if ((clean_trades[i].getTradeOpenedDate().Equals(new DateTime())) || (prevTrade.getTradeOpenedDate() < clean_trades[i].getTradeOpenedDate()))
@@ -267,7 +315,7 @@ namespace biiuse
                 }
 
 
-                if (((trade.Order.OrderType == biiuse.OrderType.FINAL) && (trade.Order.getOrderProfit() < 0)) || (trade.getTradeClosedDate().Equals(new DateTime()))) 
+                if (((trade.Order.OrderType == biiuse.OrderType.FINAL) && (trade.Order.getOrderProfit() < 0)) || (trade.getTradeClosedDate().Equals(new DateTime())))
                 {
                     streak++;
                     Print("TRADE: " + trade.getId() + " is done and a loser. Increasing index \n");
@@ -275,7 +323,7 @@ namespace biiuse
                 }
 
                 streak = 0;
-                
+
             }
 
 
@@ -291,7 +339,7 @@ namespace biiuse
 
             Print("STREAK IS: " + streak + "\n");
             return streak >= maxConsLoses;
-            
+
 
         }
 
@@ -302,21 +350,23 @@ namespace biiuse
 
             foreach (var trade in trades)
             {
-                if (!((trade.Order.getOrderProfit() == 0) && (trade.Order.OrderType == biiuse.OrderType.FINAL))) {
+                if (!((trade.Order.getOrderProfit() == 0) && (trade.Order.OrderType == biiuse.OrderType.FINAL)))
+                {
                     clean_trades.Add(trade);
                 }
             }
 
-            
+
             foreach (var trade in clean_trades)
             {
                 if (trade.getTradeOpenedDate().Equals(new DateTime())) return true;
             }
-                       
+
 
             int consLoses = 0;
 
-            if (clean_trades.Count > 1) {
+            if (clean_trades.Count > 1)
+            {
                 int index = clean_trades.Count - 1;
 
                 while (index >= 0)
@@ -345,9 +395,9 @@ namespace biiuse
                     }*/
 
                     if ((clean_trades[index].Order.OrderType == biiuse.OrderType.FINAL) && (clean_trades[index].Order.getOrderProfit() > 0))
-                            {
-                                break;
-                            }
+                    {
+                        break;
+                    }
 
                     index--;
                     Print("WARNING!!!!: should never happen");
@@ -391,7 +441,7 @@ namespace biiuse
 
         public override int deinit()
         {
-            foreach(var trade in trades)
+            foreach (var trade in trades)
             {
                 //TODO Parametrize filenames
                 trade.writeLogToFile("ATR_EA.log", true);
@@ -421,5 +471,5 @@ namespace biiuse
         private ATR_Type atrType;
     }
 
-    
+
 }

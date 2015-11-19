@@ -58,12 +58,13 @@ namespace biiuse
                 if ((indexOfHighestHigh == -1) || (indexOfLowestLow == -1))
                 {
                     mql4.Print("Could not find highest high or lowest low for reference period");
+                    this.isTradingAllowed = false;
                     return;
                 }
 
                 this.highestHigh = mql4.iHigh(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfHighestHigh);
 
-                mql4.Print("Highest High is: ", this.highestHigh);
+                mql4.Print("Highest High is: ", this.highestHigh.ToString("F5"));
 
                 this.dateOfHighestHigh = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfHighestHigh);
 
@@ -72,7 +73,7 @@ namespace biiuse
                 this.lowestLow = mql4.iLow(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfLowestLow);
                 this.dateOfLowestLow = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfLowestLow);
 
-                mql4.Print("Lowest low is: ", this.lowestLow);
+                mql4.Print("Lowest low is: ", this.lowestLow.ToString("F5"));
                 mql4.Print("Date of lowest low is: ", this.dateOfLowestLow.ToString());
 
                 //check if new High / Low happened in last 100 minutes - if yes update dateOfLowestLow / dateOfHighestHigh with accurate timestamp
@@ -206,10 +207,32 @@ namespace biiuse
 
 
             mql4.FileClose(filehandle);
+        }
 
 
-
-
+        public void addLogEntry(bool sendByEmail = true, params Object[] arg)
+        {
+            if (arg.Length <= 0) return;
+            string subject = mql4.Symbol() + "  " + mql4.TimeCurrent().ToString() + " " + arg[0];
+            mql4.Print(subject);
+            string body = "";
+            string line = "";
+            for (int i = 1; i < arg.Length; i++)
+            {
+                
+                if (arg[i].ToString() == "\n")
+                {
+                    mql4.Print(line);
+                    body += line + "\r\n";
+                    line = "";
+                } else
+                {
+                    line += arg[i] + " ";
+                }
+            }
+            body += line + "\r\n";
+            mql4.Print(line);
+            if (sendByEmail) mql4.SendMail(subject, body);
         }
 
         public DateTime getSessionStartTime()
@@ -274,6 +297,11 @@ namespace biiuse
         public bool tradingAllowed()
         {
             return this.isTradingAllowed;
+        }
+
+        public void tradingAllowed(bool status)
+        {
+            this.isTradingAllowed = status;
         }
 
         public double getTenDayHigh()
