@@ -43,7 +43,8 @@ namespace biiuse
         private bool finalState;
         private string[] log = new string[500];
         private int logSize;
-        private const int OFFSET = (-7) * 60 * 60;
+        //private const int OFFSET = (-7) * 60 * 60;
+        private const int OFFSET = 0;
         private Order order;
 
         public Order Order
@@ -137,11 +138,59 @@ namespace biiuse
                 mql4.FileWriteString(filehandle, output, output.Length);
                 mql4.FileWriteString(filehandle, "\n", 1);
                 mql4.FileClose(filehandle);
-
             }
             //enable this only when in Not Testmode or in DEBUG mode
             if (print) 
             mql4.Print(mql4.TimeToStr(mql4.TimeCurrent(), MqlApi.TIME_DATE | MqlApi.TIME_SECONDS) + ": TradeID: " + this.id + " " + entry);
+        }
+
+        public void addLogEntry(bool sendByEmail,  params Object[] arg)
+        {
+            if (arg.Length <= 0) return;
+            string subject = mql4.Symbol() + "  " + mql4.TimeCurrent().ToString() + " Trade ID: " + this.id+ " " + arg[0];
+            mql4.Print(subject);
+            this.log[logSize] = arg[0].ToString();
+            logSize++;
+
+            string body = "";
+            string line = "";
+
+            for (int i = 1; i < arg.Length; i++)
+            {
+
+                if (arg[i].ToString() == "\n")
+                {
+                    mql4.Print(line);
+                    this.log[logSize] = line;
+                    logSize++;
+                    body += line + "\r\n";
+                    line = "";
+                }
+                else
+                {
+                    line += arg[i] + " ";
+                }
+            }
+            body += line + "\r\n";
+            mql4.Print(line);
+            this.log[logSize] = line;
+            logSize++;
+
+            if ((sendByEmail) && (!mql4.IsTesting())) mql4.SendMail(subject, body);
+
+            if (!mql4.IsTesting())
+            {
+                //write to file
+                string filename = mql4.Symbol() + "_" + mql4.TimeToStr(mql4.TimeCurrent(), MqlApi.TIME_DATE);
+                int filehandle = mql4.FileOpen(filename, MqlApi.FILE_WRITE | MqlApi.FILE_READ | MqlApi.FILE_TXT);
+                mql4.FileSeek(filehandle, 0, MqlApi.SEEK_END);
+
+                mql4.FileWriteString(filehandle, subject, subject.Length);
+                mql4.FileWriteString(filehandle, "\n", 1);
+                mql4.FileWriteString(filehandle, body, body.Length);
+                mql4.FileWriteString(filehandle, "\n", 1);
+                mql4.FileClose(filehandle);
+            }
         }
 
         public void printLog()

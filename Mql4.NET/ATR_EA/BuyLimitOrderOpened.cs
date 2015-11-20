@@ -15,7 +15,7 @@ namespace biiuse
         {
             if (mql4.Ask > context.getCancelPrice())
             {
-                context.addLogEntry("Ask price went above cancel level", true);
+                context.addLogEntry(true, "Ask price went above cancel level");
 
                 ErrorType result = context.Order.deleteOrder();
 
@@ -43,7 +43,7 @@ namespace biiuse
 
             if (context.Order.OrderType == OrderType.BUY)
             {
-                context.addLogEntry("Order got filled at price: " + mql4.DoubleToStr(context.Order.getOrderOpenPrice(), mql4.Digits), true);
+                context.addLogEntry(true, "Order got filled at price: " + mql4.DoubleToStr(context.Order.getOrderOpenPrice(), mql4.Digits));
                 context.setActualEntry(context.Order.getOrderOpenPrice());
                 context.setState(new BuyOrderFilledProfitTargetNotReached(context, mql4));
                 return;

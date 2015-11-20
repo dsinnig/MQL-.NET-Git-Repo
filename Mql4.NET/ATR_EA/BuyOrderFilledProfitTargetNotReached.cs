@@ -19,8 +19,18 @@ namespace biiuse
             {
                 double pips = mql4.MathAbs(mql4.OrderClosePrice() - context.getActualEntry()) * OrderManager.getPipConversionFactor(mql4);
                 string logMessage = "Loss of " + mql4.DoubleToString(pips, 1) + " micro pips.";
-                context.addLogEntry("Stop loss triggered @" + mql4.DoubleToString(mql4.OrderClosePrice(), mql4.Digits) + " " + logMessage, true);
-                context.addLogEntry("P/L of: $" + mql4.DoubleToString(mql4.OrderProfit(), 2) + "; Commission: $" + mql4.DoubleToString(mql4.OrderCommission(), 2) + "; Swap: $" + mql4.DoubleToString(mql4.OrderSwap(), 2) + "; New Account balance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2), true);
+                //context.addLogEntry("Stop loss triggered @" + mql4.DoubleToString(mql4.OrderClosePrice(), mql4.Digits) + " " + logMessage, true);
+                //context.addLogEntry("P/L of: $" + mql4.DoubleToString(mql4.OrderProfit(), 2) + "; Commission: $" + mql4.DoubleToString(mql4.OrderCommission(), 2) + "; Swap: $" + mql4.DoubleToString(mql4.OrderSwap(), 2) + "; New Account balance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2), true);
+
+                context.addLogEntry(true, "Stop loss triggered @" + mql4.DoubleToString(mql4.OrderClosePrice(), mql4.Digits),
+                                          "Stop loss triggered @" + mql4.DoubleToString(mql4.OrderClosePrice(), mql4.Digits), "\n",
+                                          logMessage, "\n",
+                                          "P/L of: $" + mql4.DoubleToString(mql4.OrderProfit(), 2), "\n",
+                                          "Commission: $" + mql4.DoubleToString(mql4.OrderCommission(), 2), "\n",
+                                          "Swap: $" + mql4.DoubleToString(mql4.OrderSwap(), 2), "\n",
+                                          "New Account balance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2)
+                                    );
+
 
                 context.setRealizedPL(context.Order.getOrderProfit());
                 context.setActualClose(context.Order.getOrderClosePrice());
@@ -32,7 +42,7 @@ namespace biiuse
 
             if (mql4.Bid > context.getInitialProfitTarget())
             {
-                context.addLogEntry("Initial profit target reached. Looking to adjust stop loss", true);
+                context.addLogEntry(true, "Initial profit target reached. Looking to adjust stop loss");
                 context.setState(new LongProfitTargetReachedLookingToAdjustStopLoss(context, mql4));
             }
         }

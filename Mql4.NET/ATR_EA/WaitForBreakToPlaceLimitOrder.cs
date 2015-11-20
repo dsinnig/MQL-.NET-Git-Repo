@@ -40,6 +40,7 @@ namespace biiuse
             {
                 if (mql4.Bid < rangeLow)
                 {
+                    trade.addLogEntry(true, "Break below range low - Placing Sell Limit Order");
                     stopLoss = rangeHigh;
                     nextState = new SellLimitOrderOpened(trade, mql4);
                     orderResult = trade.Order.submitNewOrder(limitOrderType, entryPrice, stopLoss, 0, cancelPrice, positionSize);
@@ -48,7 +49,7 @@ namespace biiuse
                 }
                 if (mql4.Ask > rangeHigh)
                 {
-                    trade.addLogEntry("Ask price above upper range - cancel trade", true);
+                    trade.addLogEntry(true, "Ask price above upper range - cancel trade");
                     trade.setState(new TradeClosed(trade, mql4));
                     return;
                 }
@@ -58,6 +59,7 @@ namespace biiuse
             {
                 if (mql4.Ask > rangeHigh)
                 {
+                    trade.addLogEntry(true, "Break above range high - Placing Buy Limit Order");
                     stopLoss = rangeLow;
                     nextState = new BuyLimitOrderOpened(trade, mql4);
                     orderResult = trade.Order.submitNewOrder(limitOrderType, entryPrice, stopLoss, 0, cancelPrice, positionSize);
@@ -66,7 +68,7 @@ namespace biiuse
                 }
                 if (mql4.Bid < rangeLow)
                 {
-                    trade.addLogEntry("Bid price below lower range - cancel trade", true);
+                    trade.addLogEntry(true, "Bid price below lower range - cancel trade");
                     trade.setState(new TradeClosed(trade, mql4));
                     return;
                 }
@@ -91,12 +93,26 @@ namespace biiuse
                 if (orderResult == ErrorType.NO_ERROR)
                 {
                     trade.setInitialProfitTarget(Math.Round(trade.getPlannedEntry() + ((trade.getPlannedEntry() - trade.getStopLoss()) * (trade.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
-                    mql4.Print("Entry: ", trade.getPlannedEntry());
-                    mql4.Print("Stop loss: ", trade.getStopLoss());
-                    mql4.Print("MinProfit: ", trade.getMinProfitTarget());
-                    mql4.Print("Calc: ", trade.getPlannedEntry() + ((trade.getPlannedEntry() - trade.getStopLoss()) * (trade.getMinProfitTarget())));
+                    //mql4.Print("Entry: ", trade.getPlannedEntry());
+                    //mql4.Print("Stop loss: ", trade.getStopLoss());
+                    //mql4.Print("MinProfit: ", trade.getMinProfitTarget());
+                    //mql4.Print("Calc: ", trade.getPlannedEntry() + ((trade.getPlannedEntry() - trade.getStopLoss()) * (trade.getMinProfitTarget())));
                     trade.setState(nextState);
-                    trade.addLogEntry("Limit order successfully placed. Initial Profit target is: " + mql4.DoubleToString(trade.getInitialProfitTarget(), mql4.Digits) + " (" + mql4.IntegerToString((int)(mql4.MathAbs(trade.getInitialProfitTarget() - trade.getPlannedEntry()) * OrderManager.getPipConversionFactor(mql4))), true);
+
+                    double riskCapital = mql4.AccountBalance() * trade.getMaxBalanceRisk();
+                    int riskPips = (int)(mql4.MathAbs(stopLoss - entryPrice) * OrderManager.getPipConversionFactor(mql4));
+
+                    trade.addLogEntry("Limit order successfully placed. Initial Profit target is: " + mql4.DoubleToString(trade.getInitialProfitTarget(), mql4.Digits) + " (" + (mql4.IntegerToString((int)(mql4.MathAbs(trade.getInitialProfitTarget() - trade.getPlannedEntry()) * OrderManager.getPipConversionFactor(mql4)))) + ") pips", true);
+
+                    trade.addLogEntry(true, "Trade Details",
+                                                      "AccountBalance: $" + mql4.DoubleToString(mql4.AccountBalance(), 2), "\n",
+                                                      "Risk Capital: $" + mql4.DoubleToString(riskCapital, 2), "\n",
+                                                      "Risk pips: " + mql4.DoubleToString(riskPips, 2) + " micro pips", "\n",
+                                                      "Pip value: " + mql4.DoubleToString(OrderManager.getPipValue(mql4), mql4.Digits), "\n",
+                                                      "Initial Profit target is: " + mql4.DoubleToString(trade.getInitialProfitTarget(), mql4.Digits) + "(" + mql4.IntegerToString((int)(mql4.MathAbs(trade.getInitialProfitTarget() - trade.getPlannedEntry()) * OrderManager.getPipConversionFactor(mql4))) + " micro pips)");
+
+
+
                     return;
                 }
                 if ((orderResult == ErrorType.RETRIABLE_ERROR) && (trade.Order.OrderTicket == -1))

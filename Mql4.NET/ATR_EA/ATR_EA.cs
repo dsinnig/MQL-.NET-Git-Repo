@@ -81,7 +81,6 @@ namespace biiuse
                     currSession = newSession;
 
                     currSession.writeToCSV("session_atr.csv");
-                    currSession.addLogEntry(true, "Session start time: ", currSession.getSessionStartTime().ToString());
                     if (!currSession.tradingAllowed())
                     {
                         currSession.addLogEntry(true, "ATTENTION: Session could not be established", "\n", "Trading is disabled. Check log for details");
@@ -105,7 +104,7 @@ namespace biiuse
                             sessionStatus = ("ATR is not in range of: " + minATR + " - " + maxATR + ". No trades will be taken in this Session)");
                             currSession.tradingAllowed(false);
                         }
-                        else if ((ATR_OR > maxATROR) && (ATR_OR < minATROR))
+                        else if ((ATR_OR > maxATROR) || (ATR_OR < minATROR))
                         {
                             sessionStatus = ("ATR/OR is not in range of: " + (int)minATROR * 100 + " - " + (int)maxATROR * 100 + ". No trades will be taken in this Session)");
                             currSession.tradingAllowed(false);
@@ -117,9 +116,10 @@ namespace biiuse
 
                         currSession.addLogEntry(true, "New Trading Session Established",
                                                       "Session name: ", currSession.getName(), "\n",
+                                                      "Session start time: ", currSession.getSessionStartTime().ToString(), "\n",
                                                       "Reference date: ", currSession.getHHLL_ReferenceDateTime().ToString(), "\n",
                                                       "ATR: ", NormalizeDouble(atr, Digits), " (", (int)(currSession.getATR() * OrderManager.getPipConversionFactor(this)), " micro pips)", "\n",
-                                                      "HH: ", currSession.getHighestHigh().ToString("F5"), ", LL: ", currSession.getLowestLow().ToString("F5"), "\n",
+                                                      "HH: ", currSession.getHighestHigh().ToString("F5"), "(", currSession.getHighestHighTime(), ") ", "LL: ", currSession.getLowestLow().ToString("F5"), "(", currSession.getLowestLowTime(), ") ", "\n",
                                                       "10 Day High is: ", tenDayHigh.ToString("F5"), " 10 Day Low is: ", tenDayLow.ToString("F5"), "\n",
                                                       "ATR / OR is: ", ATR_OR.ToString("F5"), "\n",
                                                       sessionStatus
@@ -156,7 +156,7 @@ namespace biiuse
                     if ((DR_ATR < maxDRATR) && (DR_ATR > minDRATR))
                     {
                         go = true;
-                        status = "DR/ATR is within range. Starting 10min clock";
+                        status = "DR/ATR is within range. Starting 10bar clock";
                     }
                     else
                     {
@@ -189,7 +189,7 @@ namespace biiuse
                     if ((DR_ATR < maxDRATR) && (DR_ATR > minDRATR))
                     {
                         go = true;
-                        status = "DR/ATR is within range. Starting 10min clock";
+                        status = "DR/ATR is within range. Starting 10bar clock";
                     }
                     else
                     {
@@ -199,7 +199,7 @@ namespace biiuse
 
                     currSession.addLogEntry(true, "Tradeable Lowest Low found",
                                                   "Lowest low is: ", currSession.getLowestLow().ToString("F5"), "\n",
-                                                  "Time of highest high: ", currSession.getLowestLowTime().ToString(), "\n",
+                                                  "Time of lowest low: ", currSession.getLowestLowTime().ToString(), "\n",
                                                   "Session high: ", iHigh(null, MqlApi.PERIOD_D1, 0).ToString("F5"), " Session low: ", iLow(null, MqlApi.PERIOD_D1, 0).ToString("F5"), "\n",
                                                   "DR / ATR is: ", DR_ATR.ToString("F5"), "\n",
                                                   status

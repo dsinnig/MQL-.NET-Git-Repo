@@ -56,7 +56,6 @@ namespace biiuse
             this.tenDayRange = _tenDayRange;
             this.referenceSession = referenceSession;
             this.currentDailyRange = mql4.iHigh(null, MqlApi.PERIOD_D1, 0) - mql4.iLow(null, MqlApi.PERIOD_D1, 0);
-            mql4.Print("CurrentDailyRange Daily range is: ", currentDailyRange * OrderManager.getPipConversionFactor(mql4));
             this.maxBalanceRisk = _maxBalanceRisk;
         }
 

@@ -45,36 +45,26 @@ namespace biiuse
 
                 if (indexOfReferenceStart == -1)
                 {
-                    mql4.Print("Could not find Shift of first 1H bar of reference period");
+                    this.addLogEntry(true, "ALERT: Could not find Shift of first 1H bar of reference period. Trading is disabled.");
                     return;
                 }
 
                 int indexOfHighestHigh = mql4.iHighest(mql4.Symbol(), MqlApi.PERIOD_H1, MqlApi.MODE_HIGH, indexOfReferenceStart+1, 0);
 
-                mql4.Print("Index of HH is: ", indexOfHighestHigh);
-
                 int indexOfLowestLow = mql4.iLowest(mql4.Symbol(), MqlApi.PERIOD_H1, MqlApi.MODE_LOW, indexOfReferenceStart+1, 0);
 
                 if ((indexOfHighestHigh == -1) || (indexOfLowestLow == -1))
                 {
-                    mql4.Print("Could not find highest high or lowest low for reference period");
                     this.isTradingAllowed = false;
                     return;
                 }
 
                 this.highestHigh = mql4.iHigh(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfHighestHigh);
 
-                mql4.Print("Highest High is: ", this.highestHigh.ToString("F5"));
-
                 this.dateOfHighestHigh = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfHighestHigh);
-
-                mql4.Print("Date of highest high is: ", this.dateOfHighestHigh.ToString());
-
+                
                 this.lowestLow = mql4.iLow(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfLowestLow);
                 this.dateOfLowestLow = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_H1, indexOfLowestLow);
-
-                mql4.Print("Lowest low is: ", this.lowestLow.ToString("F5"));
-                mql4.Print("Date of lowest low is: ", this.dateOfLowestLow.ToString());
 
                 //check if new High / Low happened in last 100 minutes - if yes update dateOfLowestLow / dateOfHighestHigh with accurate timestamp
                 int i = HHLL_Threshold; //paramerize
@@ -230,9 +220,9 @@ namespace biiuse
                     line += arg[i] + " ";
                 }
             }
-            body += line + "\r\n";
+            body += line + "\r\n" + "\r\n";
             mql4.Print(line);
-            if (sendByEmail) mql4.SendMail(subject, body);
+            if ((sendByEmail) && (!mql4.IsTesting())) mql4.SendMail(subject, body);
         }
 
         public DateTime getSessionStartTime()
