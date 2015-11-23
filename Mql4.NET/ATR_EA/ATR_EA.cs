@@ -70,7 +70,8 @@ namespace biiuse
 
             //new bar?
 
-            if (!bartime.Equals(Time[0]))
+            //the second condition is to skip the first couple of minutes of when the market opens on Sunday
+            if (!bartime.Equals(Time[0]) && Time[0]-Time[2] < TimeSpan.FromHours(1))
             {
                 //TODO verify that identity makes it still work
                 bartime = Time[0];
@@ -106,7 +107,7 @@ namespace biiuse
                         }
                         else if ((ATR_OR > maxATROR) || (ATR_OR < minATROR))
                         {
-                            sessionStatus = ("ATR/OR is not in range of: " + (int)minATROR * 100 + " - " + (int)maxATROR * 100 + ". No trades will be taken in this Session)");
+                            sessionStatus = ("ATR/OR is not in range of: " + minATROR.ToString("F2") + " - " + maxATROR.ToString("F2") + ". No trades will be taken in this Session)");
                             currSession.tradingAllowed(false);
                         }
                         else
