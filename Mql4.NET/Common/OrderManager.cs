@@ -17,21 +17,76 @@ namespace biiuse
     class OrderManager
     {
 
+
+
+        public static bool isSymbol(string symbol, MqlApi mql4)
+        {
+            double bid = mql4.MarketInfo(symbol, MqlApi.MODE_BID);
+            if (mql4.GetLastError() == 4106) // unknown symbol
+                return (false);
+            else
+                return (true);
+        }
+
         public static double getPipValue(MqlApi mql4)
         {
-            double point;
+            int factor;
+            
             if (mql4.Digits == 5)
-                point = mql4.Point;
+                factor = 1;
             else
-                point = mql4.Point / 10.0;
+                factor = 10;
 
-            return (mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_TICKVALUE) * point) / mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_TICKSIZE);
+            if (!mql4.IsTesting())
+            {
+                return (mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_TICKVALUE) * factor);
+            }
+            else
+            {
+                //this works only for FOREX
+                string accountCurrency = mql4.AccountInfoString(MqlApi.ACCOUNT_CURRENCY);
+                //check if quotation currnecy is account currency. 
+                string quotationCurrency = mql4.Symbol().Substring(3, 3);
+                //if the same, then pip value is 1. 
+                if (accountCurrency.Equals(quotationCurrency))
+                {
+                    return 1.0 * factor;
+
+                }
+                //if not - find the current rate of the quotation currency compared to account currnecy. 
+                string ACCQUO = accountCurrency + quotationCurrency;
+                if (isSymbol(ACCQUO, mql4))
+                {
+                    return ((1 / mql4.MarketInfo(ACCQUO, MqlApi.MODE_BID))) * factor;
+                }
+                //if symbol does not exist try to the other way around
+                string QUOACC = quotationCurrency + accountCurrency;
+                if (isSymbol(QUOACC, mql4))
+                {
+                    return ((mql4.MarketInfo(QUOACC, MqlApi.MODE_BID))) * factor;
+                }
+                //otherwise
+                return 0.0;
+            }
+
+
+            /*
+            //if testing - use exchange rate at the time of testing, instead of current rate. Only applies to pairs where USD is the first symbol. 
+            if ((mql4.IsTesting()) && (mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_TICKVALUE) != 1))
+            {
+                return (1 / ((mql4.Bid + mql4.Ask) / 2) * point) / mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_TICKSIZE);
+            }
+            else
+            {
+                return (mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_TICKVALUE) * point) / mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_TICKSIZE);
+            }
+            */
         }
 
         public static double getLotSize(double riskCapital, int riskPips, MqlApi mql4)
         {
             double pipValue = OrderManager.getPipValue(mql4);
-            return riskCapital / ((double) riskPips * pipValue);
+            return riskCapital / ((double)riskPips * pipValue);
         }
 
         public static double getPipConversionFactor(MqlApi mql4)
@@ -50,11 +105,11 @@ namespace biiuse
             System.DateTime expiration = new DateTime();
             System.Drawing.Color arrowColor = System.Drawing.Color.Red;
 
-            double entryPrice = (double) Decimal.Round((decimal)_entryPrice, mql4.Digits, MidpointRounding.AwayFromZero);
-            double stopLoss = (double) Decimal.Round((decimal)_stopLoss, mql4.Digits, MidpointRounding.AwayFromZero);
-            double takeProfit = (double) Decimal.Round((decimal) _takeProfit, mql4.Digits, MidpointRounding.AwayFromZero);
-            double cancelPrice = (double) Decimal.Round((decimal) _cancelPrice, mql4.Digits, MidpointRounding.AwayFromZero);
-            double positionSize = (double) Decimal.Round((decimal) _positionSize, 2, MidpointRounding.AwayFromZero);
+            double entryPrice = (double)Decimal.Round((decimal)_entryPrice, mql4.Digits, MidpointRounding.AwayFromZero);
+            double stopLoss = (double)Decimal.Round((decimal)_stopLoss, mql4.Digits, MidpointRounding.AwayFromZero);
+            double takeProfit = (double)Decimal.Round((decimal)_takeProfit, mql4.Digits, MidpointRounding.AwayFromZero);
+            double cancelPrice = (double)Decimal.Round((decimal)_cancelPrice, mql4.Digits, MidpointRounding.AwayFromZero);
+            double positionSize = (double)Decimal.Round((decimal)_positionSize, 2, MidpointRounding.AwayFromZero);
 
             string orderTypeStr;
             string entryPriceStr = "";
