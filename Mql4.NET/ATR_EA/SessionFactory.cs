@@ -24,12 +24,19 @@ namespace biiuse
             if (weekendOverlap(weekday, lookBackSessions)) weekEndDelay = 2;
             else weekEndDelay = 0;
 
+            //if daily bar is still in the old session - return. Waii until it updates.
+            if ((currentSession != null) && (currentSession.getID() != 1) && (currentTime.DayOfWeek == mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0).DayOfWeek))
+            {
+                return currentSession;
+            }
+
             switch (currentTime.DayOfWeek)
             {
                 case DayOfWeek.Monday:
                     {
                         if ((currentSession == null) || (currentSession.getID() != 1))
                         {
+                            System.DateTime dailyBarStart = mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0); 
                             ///Take out session end time. It's hard to calculate and not used currently. 
                             currentSession = new Session(1, "MONDAY", mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0), new DateTime(), mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0) - TimeSpan.FromDays(lookBackSessions+weekEndDelay), true, aHHLL_Threshold, atrType, mql4);
                         }
