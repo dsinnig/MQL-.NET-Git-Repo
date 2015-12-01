@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoyalZigZagEA", "RoyalZigZa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATR_EA", "ATR_EA\ATR_EA.csproj", "{536C7E02-771A-4C30-8EEB-CD7BCC1F258F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BAAFE682-9D73-4BB0-8ADE-D2FF9EAFBAA8}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Common\Common.projitems*{02065632-a07c-4bfa-a5a5-158e36b58c9f}*SharedItemsImports = 4

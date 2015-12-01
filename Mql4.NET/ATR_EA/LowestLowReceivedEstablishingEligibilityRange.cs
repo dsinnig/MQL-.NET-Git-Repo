@@ -119,9 +119,8 @@ namespace biiuse
                                              "Range (", mql4.IntegerToString(rangePips), " micro pips) is less than max risk ", mql4.DoubleToString(context.getPercentageOfATRForMaxRisk(), 2), "% of ATR (" + mql4.IntegerToString(ATRPips), " micro pips)"
                                          );
 
-
-
                         entryPrice = rangeHigh;
+
                         stopLoss = rangeLow;
                         //cancel price if new lowest low is made 
                         cancelPrice = rangeLow + buffer - oneMicroPip;
@@ -186,7 +185,7 @@ namespace biiuse
 
                         if (result == ErrorType.NO_ERROR)
                         {
-                            context.setInitialProfitTarget(Math.Round(context.getPlannedEntry() + ((context.getPlannedEntry() - context.getStopLoss()) * (context.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
+                            context.setInitialProfitTarget(Math.Round(rangeHigh + ((rangeHigh - rangeLow) * (context.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
                             context.setState(nextState);
                             //context.addLogEntry("Order successfully placed. Initial Profit target is: " + mql4.DoubleToString(context.getInitialProfitTarget(), mql4.Digits) + " (" + mql4.IntegerToString((int)(mql4.MathAbs(context.getInitialProfitTarget() - context.getPlannedEntry()) * factor)) + " micro pips)" + " Risk is: " + mql4.IntegerToString((int)riskPips) + " micro pips", true);
 
