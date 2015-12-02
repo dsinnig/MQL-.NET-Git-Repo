@@ -24,11 +24,13 @@ namespace biiuse
             if (weekendOverlap(weekday, lookBackSessions)) weekEndDelay = 2;
             else weekEndDelay = 0;
 
+            /*
             //if daily bar is still in the old session - return. Waii until it updates.
             if ((currentSession != null) && (currentSession.getID() != 1) && (currentTime.DayOfWeek == mql4.iTime(mql4.Symbol(), MqlApi.PERIOD_D1, 0).DayOfWeek))
             {
                 return currentSession;
             }
+            */
 
             switch (currentTime.DayOfWeek)
             {

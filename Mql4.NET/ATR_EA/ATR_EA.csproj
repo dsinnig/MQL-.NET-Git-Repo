@@ -69,6 +69,7 @@
     <Compile Include="StopBuyOrderOpened.cs" />
     <Compile Include="StopSellOrderOpened.cs" />
     <Compile Include="WaitForBreakToPlaceLimitOrder.cs" />
+    <Compile Include="WaitForRetracement.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ds%40dsinnig.com.snk" />

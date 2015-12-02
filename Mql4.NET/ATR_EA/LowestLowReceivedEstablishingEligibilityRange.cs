@@ -121,6 +121,9 @@ namespace biiuse
 
                         entryPrice = rangeHigh;
 
+                        //if entry level is not 0 - adjust entry price accordingly. 
+                        entryPrice += (rangeHigh - rangeLow) * (context.getEntryLevel());
+
                         stopLoss = rangeLow;
                         //cancel price if new lowest low is made 
                         cancelPrice = rangeLow + buffer - oneMicroPip;
@@ -150,8 +153,11 @@ namespace biiuse
                         orderType = MqlApi.OP_BUYLIMIT;
                         context.setOrderType("BUY_LIMIT");
                         int riskPips = (int)(mql4.MathAbs(stopLoss - entryPrice) * factor);
-                        //TODO Parametrize Risk
-                        double riskCapital = mql4.AccountBalance() * context.getMaxBalanceRisk(); ///Parametrize
+                        //adjust if addOn trade
+                        riskPips = riskPips + (int)(riskPips * context.getEntryLevel());
+
+
+                        double riskCapital = mql4.AccountBalance() * context.getMaxBalanceRisk(); 
                         positionSize = Math.Round(OrderManager.getLotSize(riskCapital, riskPips, mql4), context.getLotDigits(), MidpointRounding.AwayFromZero);
                         context.setState(new WaitForBreakToPlaceLimitOrder(context, orderType, rangeLow, rangeHigh, entryPrice, cancelPrice, positionSize, mql4));
                         return;

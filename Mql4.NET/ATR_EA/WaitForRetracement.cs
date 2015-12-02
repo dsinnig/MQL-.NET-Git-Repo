@@ -1,99 +1,78 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NQuotes;
 
 namespace biiuse
 {
-    class WaitForBreakToPlaceLimitOrder : TradeState
+    internal class WaitForRetracement : TradeState
     {
         private ATRTrade trade;
-        private int limitOrderType;
-        private double rangeLow;
-        private double rangeHigh;
-        private double entryPrice;
+        private int stopOrderType;
+        private double retracementLevel;
+        private double stopLoss;
         private double cancelPrice;
         private double positionSize;
-
-        public WaitForBreakToPlaceLimitOrder(ATRTrade _trade, int _limitOrderType, double _rangeLow, double _rangeHigh, double _entryPrice, double _cancelPrice, double _positionSize, MqlApi mql4) : base(mql4)
+        
+        public WaitForRetracement(ATRTrade _trade, int _stopOrderType, double _retracementLevel, double _stopLoss, double _cancelPrice, double _positionSize, MqlApi mql4) : base(mql4)
         {
-            trade = _trade;
-            limitOrderType = _limitOrderType;
-            rangeHigh = _rangeHigh;
-            rangeLow = _rangeLow;
-            cancelPrice = _cancelPrice;
-            positionSize = _positionSize;
-            entryPrice = _entryPrice;
+            this.trade = _trade;
+            this.stopOrderType = _stopOrderType;
+            this.retracementLevel = _retracementLevel;
+            this.stopLoss = _stopLoss;
+            this.cancelPrice = _cancelPrice;
+            this.positionSize = _positionSize;
         }
 
         public override void update()
         {
             ErrorType orderResult = ErrorType.NO_ERROR;
             bool orderPlaced = false;
-            double stopLoss = 0.0;
+            double entryPrice = 0.0;
+            double initialProfitTarget = 0.0;
             TradeState nextState = null;
 
-
-            if (limitOrderType == MqlApi.OP_SELLLIMIT)
+            if (stopOrderType == MqlApi.OP_SELLSTOP)
             {
-                if (mql4.Bid < rangeLow)
+                if (mql4.Bid > retracementLevel)
                 {
+                    trade.addLogEntry(true, "Retracement complete - placing SELL stop order");
+                    nextState = new StopSellOrderOpened(trade, mql4);
+                    entryPrice = retracementLevel - ((stopLoss- retracementLevel) * trade.getEntryLevel());
+                    initialProfitTarget = retracementLevel - ((stopLoss - retracementLevel) * trade.getMinProfitTarget());
 
-                    if (trade.getEntryLevel() == 0)
-                    {
 
-                        trade.addLogEntry(true, "Break below range low - Placing Sell Limit Order");
-                        stopLoss = rangeHigh;
-                        nextState = new SellLimitOrderOpened(trade, mql4);
-                        orderResult = trade.Order.submitNewOrder(limitOrderType, entryPrice, stopLoss, 0, cancelPrice, positionSize);
-                        orderPlaced = true;
-                    } else
-                    {
-                        trade.addLogEntry(true, "Break below range low - Waiting for retracement");
-                        stopLoss = rangeHigh;
-                        double retracementLevel = entryPrice;
-                        nextState = new WaitForRetracement(trade, MqlApi.OP_SELLSTOP, retracementLevel, stopLoss, cancelPrice, positionSize, mql4);
-                        trade.setState(nextState);
-                    }
-
+                    orderResult = trade.Order.submitNewOrder(stopOrderType, entryPrice, stopLoss, 0, stopLoss, positionSize);
+                    orderPlaced = true;
+                    trade.setCancelPrice(stopLoss);
                 }
-                if (mql4.Ask > rangeHigh)
+
+                if (mql4.Bid < cancelPrice)
                 {
-                    trade.addLogEntry(true, "Ask price above upper range - cancel trade");
+                    trade.addLogEntry(true, "Bid price went below cancel level - close trade");
                     trade.setState(new TradeClosed(trade, mql4));
                     return;
                 }
             }
-
-            if (limitOrderType == MqlApi.OP_BUYLIMIT)
+            if (stopOrderType == MqlApi.OP_BUYSTOP)
             {
-                if (mql4.Ask > rangeHigh)
-                {
-                    if (trade.getEntryLevel() == 0)
-                    {
-                        trade.addLogEntry(true, "Break above range high - Placing Buy Limit Order");
-                        stopLoss = rangeLow;
-                        nextState = new BuyLimitOrderOpened(trade, mql4);
-                        orderResult = trade.Order.submitNewOrder(limitOrderType, entryPrice, stopLoss, 0, cancelPrice, positionSize);
-                        orderPlaced = true;
-                    } else
-                    {
-                        trade.addLogEntry(true, "Break above range high - Waiting for retracement");
-                        stopLoss = rangeLow;
-                        double retracementLevel = entryPrice;
-                        nextState = new WaitForRetracement(trade, MqlApi.OP_BUYSTOP, retracementLevel, stopLoss, cancelPrice, positionSize, mql4);
-                        trade.setState(nextState);
-                    }
 
-                }
-                if (mql4.Bid < rangeLow)
+                if (mql4.Ask < retracementLevel)
                 {
-                    trade.addLogEntry(true, "Bid price below lower range - cancel trade");
+                    trade.addLogEntry(true, "Retracement complete - placing BUY stop order");
+                    nextState = new StopBuyOrderOpened(trade, mql4);
+                    entryPrice = retracementLevel + ((retracementLevel - stopLoss) * trade.getEntryLevel());
+                    initialProfitTarget = retracementLevel + ((retracementLevel - stopLoss)) * trade.getMinProfitTarget();
+                    orderResult = trade.Order.submitNewOrder(stopOrderType, entryPrice, stopLoss, 0, stopLoss, positionSize);
+                    orderPlaced = true;
+                    trade.setCancelPrice(stopLoss);
+                }
+
+                if (mql4.Ask > cancelPrice)
+                {
+                    trade.addLogEntry(true, "Ask price went above cancel level - close trade");
                     trade.setState(new TradeClosed(trade, mql4));
                     return;
                 }
+
             }
 
             if (orderPlaced)
@@ -103,22 +82,17 @@ namespace biiuse
                 trade.setSpreadOrderOpen((int)mql4.MarketInfo(mql4.Symbol(), MqlApi.MODE_SPREAD));
                 trade.setAskPriceBeforeOrderEntry(mql4.Ask);
                 trade.setBidPriceBeforeOrderEntry(mql4.Bid);
-                trade.setCancelPrice(cancelPrice);
+                trade.setCancelPrice(stopLoss);
                 trade.setPlannedEntry(entryPrice);
                 trade.setStopLoss(stopLoss);
                 trade.setOriginalStopLoss(stopLoss);
                 trade.setTakeProfit(0);
-                trade.setCancelPrice(cancelPrice);
                 trade.setPositionSize(positionSize);
                 trade.setOriginalStopLoss(stopLoss);
 
                 if (orderResult == ErrorType.NO_ERROR)
                 {
-                    trade.setInitialProfitTarget(Math.Round(trade.getPlannedEntry() + ((trade.getPlannedEntry() - trade.getStopLoss()) * (trade.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
-                    //mql4.Print("Entry: ", trade.getPlannedEntry());
-                    //mql4.Print("Stop loss: ", trade.getStopLoss());
-                    //mql4.Print("MinProfit: ", trade.getMinProfitTarget());
-                    //mql4.Print("Calc: ", trade.getPlannedEntry() + ((trade.getPlannedEntry() - trade.getStopLoss()) * (trade.getMinProfitTarget())));
+                    trade.setInitialProfitTarget(initialProfitTarget);
                     trade.setState(nextState);
 
                     double riskCapital = mql4.AccountBalance() * trade.getMaxBalanceRisk();
@@ -165,6 +139,6 @@ namespace biiuse
         }
 
 
-    }
 
+    }
 }

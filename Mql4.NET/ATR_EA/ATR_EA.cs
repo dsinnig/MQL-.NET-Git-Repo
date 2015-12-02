@@ -45,6 +45,8 @@ namespace biiuse
         [ExternVariable]
         public int maxATR = 10000; //max ATR in MicroPips to take a trade
         [ExternVariable]
+        public double entryLevel = 0; //defines the level where the trade should actually be entered (in Rs)
+        [ExternVariable]
         public bool cutLossesBeforeATRFilter = true; //min percent value for ATR / OR
         [ExternVariable]
         public string logFileName = "tradeLog.csv"; //path and filename for CSV trade log
@@ -174,7 +176,7 @@ namespace biiuse
                                                   );
                     if (go)
                     {
-                        ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getHighestHigh(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, this);
+                        ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getHighestHigh(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, entryLevel, this);
                         trade.setState(new HighestHighReceivedEstablishingEligibilityRange(trade, this));
                         trades.Add(trade);
                     }
@@ -208,7 +210,7 @@ namespace biiuse
 
                     if (go)
                     {
-                        ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getLowestLow(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, this);
+                        ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getLowestLow(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, entryLevel, this);
                         trade.setState(new LowestLowReceivedEstablishingEligibilityRange(trade, this));
                         trades.Add(trade);
                     }

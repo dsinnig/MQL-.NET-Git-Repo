@@ -36,9 +36,10 @@ namespace biiuse
         private double currentDailyRange;       
         private Session referenceSession;
         private double maxBalanceRisk;
+        private double entryLevel; 
 
         public ATRTrade(bool sim, int _lotDigits, string _logFileName, double _newHHLL, double _ATR, int _lengthIn1MBarsOfWaitingPeriod, double _percentageOfATRForMaxRisk, double _percentageOfATRForMaxVolatility,
-            double _minProfitTarget, int _rangeBufferInMicroPips, double _rangeRestriction, double _tenDayRange, Session referenceSession, double _maxBalanceRisk, MqlApi mql4) : base(sim, _lotDigits, _logFileName, mql4)
+            double _minProfitTarget, int _rangeBufferInMicroPips, double _rangeRestriction, double _tenDayRange, Session referenceSession, double _maxBalanceRisk, double _entryLevel, MqlApi mql4) : base(sim, _lotDigits, _logFileName, mql4)
         {
             this.newHHLL = _newHHLL;
             this.atr = _ATR;
@@ -57,6 +58,7 @@ namespace biiuse
             this.referenceSession = referenceSession;
             this.currentDailyRange = mql4.iHigh(null, MqlApi.PERIOD_D1, 0) - mql4.iLow(null, MqlApi.PERIOD_D1, 0);
             this.maxBalanceRisk = _maxBalanceRisk;
+            this.entryLevel = _entryLevel;
         }
 
         public double getATR()
@@ -301,6 +303,11 @@ namespace biiuse
         public double getMaxBalanceRisk()
         {
             return this.maxBalanceRisk;
+        }
+
+        public double getEntryLevel()
+        {
+            return this.entryLevel;
         }
 
         public override void writeLogToCSV()

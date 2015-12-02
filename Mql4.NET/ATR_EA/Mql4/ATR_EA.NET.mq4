@@ -56,6 +56,7 @@ input double maxDRATR = 0.35; //max percent value for ATR / OR
 input double minDRATR = 0; //min percent value for ATR / OR
 input int minATR = 0; //min ATR in micropips
 input int maxATR = 999999; //max ATR in micropips
+input double entryLevel = 0; //Level when the trade should be entered in Rs
 
 input bool cutLossesBeforeATRFilter=true; //Flag whether the losing streak filter should take into account trades with invalid ATR OT 
 input string logFileName="tradeLog.csv"; //path and filename for CSV trade log
@@ -84,6 +85,7 @@ int init()
    nquotes_set_property_double("minDRATR",minDRATR);  
    nquotes_set_property_int("minATR",minATR); 
    nquotes_set_property_int("maxATR",maxATR); 
+   nquotes_set_property_double("entryLevel",entryLevel);  
    nquotes_set_property_bool("cutLossesBeforeATRFilter", cutLossesBeforeATRFilter);
    nquotes_set_property_string("logFileName",logFileName); 
  

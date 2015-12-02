@@ -127,6 +127,10 @@ namespace biiuse
                         //context.addLogEntry("Range (" + mql4.IntegerToString(rangePips) + " micro pips) is less than max risk " + mql4.DoubleToString(context.getPercentageOfATRForMaxRisk(), 2) + "% of ATR (" + mql4.IntegerToString(ATRPips) + " micro pips)", true);
 
                         entryPrice = rangeLow;
+
+                        //if entry level is not 0 - adjust entry price accordingly. 
+                        entryPrice -= (rangeHigh - rangeLow) * (context.getEntryLevel());
+
                         stopLoss = rangeHigh;
                         cancelPrice = rangeHigh - buffer + oneMicroPip;
                         orderType = MqlApi.OP_SELLSTOP;
@@ -150,6 +154,10 @@ namespace biiuse
 
 
                         entryPrice = rangeHigh - context.getATR() * (context.getPercentageOfATRForMaxRisk() / 100.00);
+
+
+
+
                         //mql4.Print("ATR is!!!! ", context.getATR());
                         //mql4.Print("Percent is!!: ", context.getPercentageOfATRForMaxRisk());
                         //mql4.Print("cal. diff is: ", context.getATR() * (context.getPercentageOfATRForMaxRisk() / 100.00));
@@ -160,7 +168,12 @@ namespace biiuse
                         cancelPrice = rangeHigh - buffer + oneMicroPip - context.getATR() * (context.getPercentageOfATRForMaxVolatility() / 100.00); //cancel if above 20% of ATR
                         orderType = MqlApi.OP_SELLLIMIT;
                         context.setOrderType("SELL_LIMIT");
+
                         int riskPips = (int)(mql4.MathAbs(stopLoss - entryPrice) * factor);
+
+                        //adjust if addOn trade
+                        riskPips = riskPips + (int) (riskPips * context.getEntryLevel());
+                                                
                         /// TODO Parametrize Risk
                         double riskCapital = mql4.AccountBalance() * context.getMaxBalanceRisk(); ///Parametrize
                         positionSize = Math.Round(OrderManager.getLotSize(riskCapital, riskPips, mql4), context.getLotDigits(), MidpointRounding.AwayFromZero);
@@ -196,7 +209,7 @@ namespace biiuse
 
                         if (result == ErrorType.NO_ERROR)
                         {
-                            context.setInitialProfitTarget(Math.Round(context.getPlannedEntry() + ((context.getPlannedEntry() - context.getStopLoss()) * (context.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
+                            context.setInitialProfitTarget(Math.Round(rangeLow + ((rangeLow - rangeHigh) * (context.getMinProfitTarget())), mql4.Digits, MidpointRounding.AwayFromZero));
                             context.setState(nextState);
                             //context.addLogEntry("Order successfully placed. Initial Profit target is: " + mql4.DoubleToString(context.getInitialProfitTarget(), mql4.Digits) + " (" + mql4.IntegerToString((int)(mql4.MathAbs(context.getInitialProfitTarget() - context.getPlannedEntry()) * factor)) + " micro pips)" + " Risk is: " + mql4.IntegerToString((int)riskPips) + " micro pips", true);
                             context.addLogEntry(true, "Trade Details",
