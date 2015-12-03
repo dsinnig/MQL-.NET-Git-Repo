@@ -126,7 +126,10 @@ namespace biiuse
 
                         stopLoss = rangeLow;
                         //cancel price if new lowest low is made 
-                        cancelPrice = rangeLow + buffer - oneMicroPip;
+
+                        if (context.getEntryLevel() == 0) cancelPrice = rangeLow + buffer - oneMicroPip;
+                        else cancelPrice = rangeLow;
+                        
                         orderType = MqlApi.OP_BUYSTOP;
                         context.setOrderType("BUY_STOP");
                         nextState = new StopBuyOrderOpened(context, mql4);

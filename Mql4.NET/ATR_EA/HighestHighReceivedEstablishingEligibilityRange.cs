@@ -132,7 +132,10 @@ namespace biiuse
                         entryPrice -= (rangeHigh - rangeLow) * (context.getEntryLevel());
 
                         stopLoss = rangeHigh;
-                        cancelPrice = rangeHigh - buffer + oneMicroPip;
+
+                        if (context.getEntryLevel() == 0) cancelPrice = rangeHigh - buffer + oneMicroPip;
+                        else cancelPrice = rangeHigh;
+
                         orderType = MqlApi.OP_SELLSTOP;
                         context.setOrderType("SELL_STOP");
                         nextState = new StopSellOrderOpened(context, mql4);

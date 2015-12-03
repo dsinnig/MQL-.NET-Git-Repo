@@ -31,7 +31,7 @@ namespace biiuse
         public static double getPipValue(MqlApi mql4)
         {
             int factor;
-            
+
             if (mql4.Digits == 5)
                 factor = 1;
             else
@@ -50,20 +50,35 @@ namespace biiuse
                 //if the same, then pip value is 1. 
                 if (accountCurrency.Equals(quotationCurrency))
                 {
-                    return 1.0 * factor;
+                    return 1.0;
 
                 }
                 //if not - find the current rate of the quotation currency compared to account currnecy. 
                 string ACCQUO = accountCurrency + quotationCurrency;
                 if (isSymbol(ACCQUO, mql4))
                 {
+
+                    double revPipValue = (mql4.iOpen(ACCQUO, MqlApi.PERIOD_M1, 0)) * factor;
+                    if (revPipValue == 0)
+                    {
+                        mql4.Print("Data for ", ACCQUO, " not found. It's required for pip value conversion. Please load data.");
+                        mql4.ExpertRemove();
+                        return 0;
+                    }
                     return ((1 / mql4.MarketInfo(ACCQUO, MqlApi.MODE_BID))) * factor;
                 }
                 //if symbol does not exist try to the other way around
                 string QUOACC = quotationCurrency + accountCurrency;
                 if (isSymbol(QUOACC, mql4))
                 {
-                    return ((mql4.MarketInfo(QUOACC, MqlApi.MODE_BID))) * factor;
+                    double pipValue = mql4.iOpen(QUOACC, MqlApi.PERIOD_M1, 0) * factor;
+                    if (pipValue == 0)
+                    {
+                        mql4.Print("Data for ", QUOACC, " not found. It's required for pip value conversion. Please load data.");
+                        mql4.ExpertRemove();
+                        return 0;
+                    }
+                    return pipValue;
                 }
                 //otherwise
                 return 0.0;
