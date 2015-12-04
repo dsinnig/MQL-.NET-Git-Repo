@@ -12,6 +12,7 @@ namespace biiuse
 
     public class Trade : MQL4Wrapper
     {
+        protected string strategyLabel;
         protected string id;
         protected double startingBalance;
         protected double endingBalance;
@@ -62,8 +63,9 @@ namespace biiuse
             }
         }
 
-        public Trade(bool sim, int _lotDigits, string _logFileName, NQuotes.MqlApi mql4) : base(mql4)
+        public Trade(string _strategyLabel, bool sim, int _lotDigits, string _logFileName, NQuotes.MqlApi mql4) : base(mql4)
         {
+            this.strategyLabel = _strategyLabel;
             this.logFileName = _logFileName;
             this.tradeType = TradeType.FLAT;
             this.startingBalance = mql4.AccountBalance();
@@ -157,7 +159,7 @@ namespace biiuse
         public void addLogEntry(bool sendByEmail, params Object[] arg)
         {
             if (arg.Length <= 0) return;
-            string subject = mql4.Symbol() + "  " + mql4.TimeCurrent().ToString() + " Trade ID: " + this.id + " " + arg[0];
+            string subject = strategyLabel + " " + mql4.Symbol() + "  " + mql4.TimeCurrent().ToString() + " Trade ID: " + this.id + " " + arg[0];
             mql4.Print(subject);
             this.log[logSize] = arg[0].ToString();
             logSize++;
@@ -191,7 +193,7 @@ namespace biiuse
             if (!mql4.IsTesting())
             {
                 //write to file
-                string filename = mql4.Symbol() + "_" + mql4.TimeToStr(mql4.TimeCurrent(), MqlApi.TIME_DATE);
+                string filename = strategyLabel + " " + mql4.Symbol() + "_" + mql4.TimeToStr(mql4.TimeCurrent(), MqlApi.TIME_DATE);
                 int filehandle = mql4.FileOpen(filename, MqlApi.FILE_WRITE | MqlApi.FILE_READ | MqlApi.FILE_TXT);
                 mql4.FileSeek(filehandle, 0, MqlApi.SEEK_END);
 
@@ -205,7 +207,7 @@ namespace biiuse
 
         public void printLog()
         {
-            mql4.Print("****Trade: " + this.id, " ****");
+            mql4.Print("****Trade: " + strategyLabel + ": " + this.id, " ****");
             for (int i = 0; i < logSize; ++i)
             {
                 mql4.Print(log[i]);
@@ -280,10 +282,10 @@ namespace biiuse
             //if first entry, write column headers
             if (mql4.FileTell(filehandle) == 0)
             {
-                output = "TRADE_ID, ORDER_TICKET, TRADE_TYPE, SYMBOL, TRADE_OPENED_DATE, ORDER_PLACED_DATE, STARTING_BALANCE, PLANNED_ENTRY, ORDER_FILLED_DATE, ACTUAL_ENTRY, SPREAD_ORDER_OPEN, INITIAL_STOP_LOSS, REVISED_STOP_LOSS, INITIAL_TAKE_PROFIT, REVISED TAKE_PROFIT, CANCEL_PRICE, ACTUAL_CLOSE, SPREAD_ORDER_CLOSE, POSITION_SIZE, MIN_UNREALIZED_PL, MAX_UNREALIZED_PL, REALIZED PL, COMMISSION, SWAP, ENDING_BALANCE, TRADE_CLOSED_DATE";
+                output = "STRATEGY, TRADE_ID, ORDER_TICKET, TRADE_TYPE, SYMBOL, TRADE_OPENED_DATE, ORDER_PLACED_DATE, STARTING_BALANCE, PLANNED_ENTRY, ORDER_FILLED_DATE, ACTUAL_ENTRY, SPREAD_ORDER_OPEN, INITIAL_STOP_LOSS, REVISED_STOP_LOSS, INITIAL_TAKE_PROFIT, REVISED TAKE_PROFIT, CANCEL_PRICE, ACTUAL_CLOSE, SPREAD_ORDER_CLOSE, POSITION_SIZE, MIN_UNREALIZED_PL, MAX_UNREALIZED_PL, REALIZED PL, COMMISSION, SWAP, ENDING_BALANCE, TRADE_CLOSED_DATE";
                 mql4.FileWriteString(filehandle, output, output.Length);
             }
-            output = this.id + ", " + this.Order.OrderTicket + ", " + this.tradeType + "," + mql4.Symbol() + ", " + ExcelUtil.datetimeToExcelDate(this.tradeOpenedDate) + ", " + ExcelUtil.datetimeToExcelDate(this.orderPlacedDate) + ", " + this.startingBalance + ", " + this.plannedEntry + ", " + ExcelUtil.datetimeToExcelDate(this.orderFilledDate) + ", " + this.actualEntry + ", " + this.spreadOrderOpen + ", " + this.originalStopLoss + ", " + this.stopLoss + ", " + this.initialProfitTarget + ", " + this.takeProfit + ", " + this.cancelPrice + ", " + this.actualClose + ", " + this.spreadOrderClose + ", " + this.positionSize + ", " + this.minUnrealizedPL + ", " + this.maxUnrealizedPL + ", " + this.realizedPL + ", " + this.Order.getOrderCommission() + ", " + this.Order.getOrderSwap() + ", " + this.endingBalance + ", " + ExcelUtil.datetimeToExcelDate(this.tradeClosedDate);
+            output = this.strategyLabel + ", " + this.id + ", " + this.Order.OrderTicket + ", " + this.tradeType + "," + mql4.Symbol() + ", " + ExcelUtil.datetimeToExcelDate(this.tradeOpenedDate) + ", " + ExcelUtil.datetimeToExcelDate(this.orderPlacedDate) + ", " + this.startingBalance + ", " + this.plannedEntry + ", " + ExcelUtil.datetimeToExcelDate(this.orderFilledDate) + ", " + this.actualEntry + ", " + this.spreadOrderOpen + ", " + this.originalStopLoss + ", " + this.stopLoss + ", " + this.initialProfitTarget + ", " + this.takeProfit + ", " + this.cancelPrice + ", " + this.actualClose + ", " + this.spreadOrderClose + ", " + this.positionSize + ", " + this.minUnrealizedPL + ", " + this.maxUnrealizedPL + ", " + this.realizedPL + ", " + this.Order.getOrderCommission() + ", " + this.Order.getOrderSwap() + ", " + this.endingBalance + ", " + ExcelUtil.datetimeToExcelDate(this.tradeClosedDate);
             mql4.FileWriteString(filehandle, "\n", 1);
             mql4.FileWriteString(filehandle, output, output.Length);
             mql4.FileClose(filehandle);

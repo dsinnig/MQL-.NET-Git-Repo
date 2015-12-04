@@ -12,7 +12,7 @@ namespace biiuse
 
     internal class Session : MQL4Wrapper
     {
-        public Session(int aSessionID, string aSessionName, DateTime aSessionStartDateTime, DateTime aSessionEndDateTime, DateTime aHHLL_ReferenceDateTime, bool tradingFlag, int aHHLLThreshold, ATR_Type atrType, MqlApi mql4) : base(mql4)
+        public Session(string _strategyLabel, int aSessionID, string aSessionName, DateTime aSessionStartDateTime, DateTime aSessionEndDateTime, DateTime aHHLL_ReferenceDateTime, bool tradingFlag, int aHHLLThreshold, ATR_Type atrType, MqlApi mql4) : base(mql4)
         {
             this.sessionID = aSessionID;
             this.sessionName = aSessionName;
@@ -24,6 +24,7 @@ namespace biiuse
             this.highestHigh = -1;
             this.lowestLow = 9999999999;
             this.atrType = atrType;
+            this.strategyLabel = _strategyLabel;
 
             initialize();
         }
@@ -203,7 +204,7 @@ namespace biiuse
         public void addLogEntry(bool sendByEmail = true, params Object[] arg)
         {
             if (arg.Length <= 0) return;
-            string subject = mql4.Symbol() + "  " + mql4.TimeCurrent().ToString() + " " + arg[0];
+            string subject = strategyLabel + " " + mql4.Symbol() + "  " + mql4.TimeCurrent().ToString() + " " + arg[0];
             mql4.Print(subject);
             string body = "";
             string line = "";
@@ -323,5 +324,6 @@ namespace biiuse
         private double tenDayHigh;
         private ATR_Type atrType;
         private double atr5D;
+        private string strategyLabel;
     }
 }

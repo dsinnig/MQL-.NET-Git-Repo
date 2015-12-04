@@ -7,6 +7,8 @@ namespace biiuse
     class ATR_EA : NQuotes.MqlApi
     {
         [ExternVariable]
+        public string strategyLabel = ""; //Label for the strategy - will be used in log and email. 
+        [ExternVariable]
         public double maxBalanceRisk = 0.0075; //Max risk per trader relative to account balance (in %)
         [ExternVariable]
         public int sundayLengthInHours = 7; //Length of Sunday session in hours
@@ -78,7 +80,7 @@ namespace biiuse
                 //TODO verify that identity makes it still work
                 bartime = Time[0];
 
-                Session newSession = SessionFactory.getCurrentSession(sundayLengthInSeconds, HHLL_Threshold, lookBackSessions, atrType, this);
+                Session newSession = SessionFactory.getCurrentSession(sundayLengthInSeconds, HHLL_Threshold, lookBackSessions, atrType, strategyLabel, this);
                 if (currSession != newSession)
                 {
                     currSession = newSession;
@@ -176,7 +178,7 @@ namespace biiuse
                                                   );
                     if (go)
                     {
-                        ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getHighestHigh(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, entryLevel, this);
+                        ATRTrade trade = new ATRTrade(strategyLabel, false, lotDigits, logFileName, currSession.getHighestHigh(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, entryLevel, this);
                         trade.setState(new HighestHighReceivedEstablishingEligibilityRange(trade, this));
                         trades.Add(trade);
                     }
@@ -210,7 +212,7 @@ namespace biiuse
 
                     if (go)
                     {
-                        ATRTrade trade = new ATRTrade(false, lotDigits, logFileName, currSession.getLowestLow(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, entryLevel, this);
+                        ATRTrade trade = new ATRTrade(strategyLabel, false, lotDigits, logFileName, currSession.getLowestLow(), currSession.getATR(), lengthOfGracePeriod, maxRisk, maxVolatility, minProfitTarget, rangeBuffer, rangeRestriction, currSession.getTenDayHigh() - currSession.getTenDayLow(), currSession, maxBalanceRisk, entryLevel, this);
                         trade.setState(new LowestLowReceivedEstablishingEligibilityRange(trade, this));
                         trades.Add(trade);
                     }
